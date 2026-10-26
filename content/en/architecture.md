@@ -6,8 +6,8 @@ description: "The planned pipeline: a Go parser and lowering, a runtime in Go, B
 
 <!-- From go-scikit/roadmap bib/julia.md, sections 1, 2, 4.1, 5 and 6 (go-scikit/roadmap, main). Change the roadmap first, then here. Counts are from the sources at the revisions the bibliography names. -->
 
-**Status: planned, with the parser (M1) in development.** This page is the design
-the bibliography recommends. None of it is released, and where the bibliography
+**Status: the parser (M1) is released in v0.2.0; the rest is planned.** This page
+is the design the bibliography recommends. Only the parser is released, and where the bibliography
 says a point is unmeasured, this page says so.
 
 ## The pipeline
@@ -55,6 +55,30 @@ instruction set an interpreter must execute. Julia's own C interpreter over it i
 - **Oracle:** the real `JuliaSyntax.parseall(Expr, …)` on every file of `base/`,
   `stdlib/`, `test/` and the JuliaSyntax test corpus, compared as serialised `Expr`
   trees.
+
+### Parser: usage (v0.2.0)
+
+`syntax.ParseAll(src, filename)` in
+[go-embedded-julia/julia](https://github.com/go-embedded-julia/julia) returns the
+same `Expr` as julia's `Meta.parseall`, including julia's error `Expr`:
+the statements before the first error, then `Expr(:error)` or `Expr(:incomplete)`
+with the formatted `ParseError`.
+
+```go
+e := syntax.ParseAll([]byte("f(x) = x^2 + 1"), "cell.jl")
+```
+
+serialises to
+
+```
+(:toplevel {L 1 :"cell.jl"} (:"=" (:call :f :x) (:block {L 1 :"cell.jl"} (:call :"+" (:call :"^" :x 2) 1))))
+```
+
+Parsing is bounded (64 MiB, depth 4000) and `ParseAllLimits` returns an error
+rather than an `Expr` on failure. Known gap: on a few malformed
+inputs JuliaSyntax itself throws and julia falls back to femtolisp, which is not
+ported; there `ParseAll` returns `Expr(:error)` and `ParseAllLimits` an error
+wrapping `syntax.ErrParserFailed`.
 
 ## Lowering: port JuliaLowering, keep `julia-syntax.scm` as the oracle
 

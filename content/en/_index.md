@@ -4,11 +4,15 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: milestones M0 (oracle harness) and M1 (parser)."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.2.0 completes M0 (oracle harness) and M1 (parser); M2 (lowering) is planned."
 ---
 
-**go-embedded-julia is in development: milestone M0 (the oracle harness, against
-julia 1.12.6) is done and milestone M1 (the parser) is in progress.** Nothing is released: no tag exists, and these pages
+**go-embedded-julia is in development. [v0.2.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.2.0)
+(2026-10-26) completes milestone M0 (the oracle harness, against julia 1.12.6)
+and milestone M1 (the parser): a Go port of JuliaSyntax, `Expr`-identical to
+`Meta.parseall` on 1191 of 1191 files of julia's own tree.** Milestone M2
+(lowering) is planned. The interpreter itself does not exist yet: apart from the
+parser, these pages
 describe a plan, not a finished interpreter. Every statement comes from the
 bibliography of the [go-scikit roadmap](https://github.com/go-scikit/roadmap),
 [`bib/julia.md`](https://github.com/go-scikit/roadmap/blob/main/bib/julia.md).
@@ -41,15 +45,16 @@ It is an interpreter. It keeps Julia's semantics, not its native speed; heavy
 computation goes through the Go libraries. An interpreter cannot match Julia's JIT
 on loops. The comparisons that can hold are start-up and first result, and the
 kernels routed to go-ndarray and go-bignum. The plan marks every interpreter speed
-statement as unverified: nothing has been run yet, and the ratio will be stated
-per milestone once it is measured.
+statement as unverified, except the parser's (0.98 s against 1.39 s for
+`Meta.parseall` on one core, over julia 1.12.6's `share/julia` tree); the ratio
+of each later milestone will be stated once it is measured.
 
 ## Pages
 
 | Page | What it holds |
 | --- | --- |
 | [Plan]({{< relref "plan" >}}) | milestones M0 to M7 with their size and exit test, what the playground shows at each, and how conformance is measured |
-| [Architecture]({{< relref "architecture" >}}) | the pipeline, the parser, the lowering, the runtime in Go, type inference, the Base bootstrap and the image |
+| [Architecture]({{< relref "architecture" >}}) | the pipeline, the parser (with its usage), the lowering, the runtime in Go, type inference, the Base bootstrap and the image |
 | [Runtime boundary]({{< relref "runtime-boundary" >}}) | the counts: intrinsics, builtins, `ccall` sites by target, regex, FFT |
 | [Licences]({{< relref "licences" >}}) | what may be translated, what is run or replaced, and the GPL parts avoided |
 

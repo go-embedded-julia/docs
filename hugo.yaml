@@ -5,7 +5,7 @@
 # minor version among the libraries the pages describe (0.1, 0.2, ...), or
 # "main" while none of them is tagged. The CI sets it through --baseURL, from
 # params.libraries below. This default is the same build.
-baseURL: "https://go-embedded-julia.github.io/docs/main/"
+baseURL: "https://go-embedded-julia.github.io/docs/0.2/"
 title: "go-embedded-julia"
 # themes/hextra is the tannevaled/hextra fork, pinned at a release tag:
 # upstream Hextra plus opt-in features (partial menu items, combos,
@@ -83,14 +83,14 @@ menu:
         icon: github
 
 params:
-  description: "go-embedded-julia (in development: milestones M0, the oracle harness, and M1, the parser): a Julia interpreter in pure Go that can be embedded, for the julia cells of go-notebook and its WebAssembly playground."
+  description: "go-embedded-julia (in development, v0.2.0: milestones M0, the oracle harness, and M1, the parser, are done): a Julia interpreter in pure Go that can be embedded, for the julia cells of go-notebook and its WebAssembly playground."
 
   # The release of each library these pages describe, "main" while it has no
   # tag. The newest minor version among the tagged ones is the documentation's
-  # version label (v0.1.2 -> 0.1): the CI reads it here. The interpreter has no
-  # tag yet, so the documentation is version "main".
+  # version label (v0.1.2 -> 0.1): the CI reads it here. The interpreter is
+  # tagged v0.2.0, so the documentation is version 0.2.
   libraries:
-    julia: "main"
+    julia: "v0.2.0"
   versions:
     # The version selector shows "main" with the development icon.
     development: "main"
