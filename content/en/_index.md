@@ -7,8 +7,8 @@ cascade:
 description: "A pure-Go, embeddable Julia interpreter, in development: milestones M0 (oracle harness) and M1 (parser)."
 ---
 
-**go-embedded-julia is in development, at milestone M0 (the oracle harness) and
-milestone M1 (the parser).** Nothing is released: no tag exists, and these pages
+**go-embedded-julia is in development: milestone M0 (the oracle harness, against
+julia 1.12.6) is done and milestone M1 (the parser) is in progress.** Nothing is released: no tag exists, and these pages
 describe a plan, not a finished interpreter. Every statement comes from the
 bibliography of the [go-scikit roadmap](https://github.com/go-scikit/roadmap),
 [`bib/julia.md`](https://github.com/go-scikit/roadmap/blob/main/bib/julia.md).
@@ -57,9 +57,10 @@ per milestone once it is measured.
 
 | Repo | What it is |
 | --- | --- |
+| [julia](https://github.com/go-embedded-julia/julia) | the interpreter (source) |
 | [docs](https://github.com/go-embedded-julia/docs) | this site |
 | [go-embedded-julia.github.io](https://github.com/go-embedded-julia/go-embedded-julia.github.io) | the landing page |
 | [brand](https://github.com/go-embedded-julia/brand) | the logo, icons and social images |
 
-The interpreter's own repository is created separately and is not described here
-until it exists.
+The interpreter itself is in
+[go-embedded-julia/julia](https://github.com/go-embedded-julia/julia).
