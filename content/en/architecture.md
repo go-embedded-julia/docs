@@ -4,7 +4,7 @@ weight: 20
 description: "The planned pipeline: a Go parser and lowering, a runtime in Go, Base run unchanged through an interpreter, and a pre-built image."
 ---
 
-<!-- From go-scikit/roadmap bib/julia.md, sections 1, 2, 4.1, 5 and 6 (pull request 12). Change the roadmap first, then here. Counts are from the sources at the revisions the bibliography names. -->
+<!-- From go-scikit/roadmap bib/julia.md, sections 1, 2, 4.1, 5 and 6 (go-scikit/roadmap, main). Change the roadmap first, then here. Counts are from the sources at the revisions the bibliography names. -->
 
 **Status: planned, with the parser (M1) in development.** This page is the design
 the bibliography recommends. None of it is released, and where the bibliography

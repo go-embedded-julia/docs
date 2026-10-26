@@ -4,7 +4,7 @@ weight: 40
 description: "Julia is MIT and may be translated to Go; GMP and MPFR are replaced, not linked; the GPL parts of SuiteSparse are avoided."
 ---
 
-<!-- From go-scikit/roadmap bib/julia.md, section 3.5 (pull request 12). The licence headers were read in the clones at the revisions the bibliography names. Change the roadmap first, then here. -->
+<!-- From go-scikit/roadmap bib/julia.md, section 3.5 (go-scikit/roadmap, main). The licence headers were read in the clones at the revisions the bibliography names. Change the roadmap first, then here. -->
 
 **Status: planned.** No code has been translated yet. This page records what the
 plan allows, and the rules it will hold to.

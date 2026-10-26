@@ -4,7 +4,7 @@ weight: 10
 description: "Milestones M0 to M7: contents, size and exit test; what the playground shows at each; how conformance is measured."
 ---
 
-<!-- From go-scikit/roadmap bib/julia.md, sections 4.2 and 8 (go-scikit/roadmap pull request 12). Change the roadmap first, then here. -->
+<!-- From go-scikit/roadmap bib/julia.md, sections 4.2 and 8 (go-scikit/roadmap, main). Change the roadmap first, then here. -->
 
 **Status: in development, at milestones M0 (oracle harness) and M1 (parser).**
 M2 to M7 are planned. Nothing is released.
@@ -84,6 +84,6 @@ first, which is why M0 comes before everything else.
 
 ## Where the plan lives
 
-The bibliography is `bib/julia.md` in
-[go-scikit/roadmap](https://github.com/go-scikit/roadmap), added by
-[pull request 12](https://github.com/go-scikit/roadmap/pull/12).
+The bibliography is
+[`bib/julia.md`](https://github.com/go-scikit/roadmap/blob/main/bib/julia.md) in
+[go-scikit/roadmap](https://github.com/go-scikit/roadmap).

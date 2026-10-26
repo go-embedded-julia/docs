@@ -11,7 +11,7 @@ description: "A pure-Go, embeddable Julia interpreter, in development: milestone
 milestone M1 (the parser).** Nothing is released: no tag exists, and these pages
 describe a plan, not a finished interpreter. Every statement comes from the
 bibliography of the [go-scikit roadmap](https://github.com/go-scikit/roadmap),
-`bib/julia.md` ([pull request 12](https://github.com/go-scikit/roadmap/pull/12)).
+[`bib/julia.md`](https://github.com/go-scikit/roadmap/blob/main/bib/julia.md).
 
 ## What it will be
 
