@@ -4,7 +4,7 @@ weight: 30
 description: "What the interpreter has to provide below Base: 94 intrinsics, 83 builtins, 896 ccall sites by target, regex and FFT. The counts."
 ---
 
-<!-- From go-scikit/roadmap bib/julia.md, section 3 (pull request 12). The counts were made by a Go program over the Julia clones at the revisions the bibliography names, not by grep and not estimated. Change the roadmap first, then here. -->
+<!-- From go-scikit/roadmap bib/julia.md, section 3 (go-scikit/roadmap, main). The counts were made by a Go program over the Julia clones at the revisions the bibliography names, not by grep and not estimated. Change the roadmap first, then here. -->
 
 **Status: planned (milestones M3 to M5).** This page counts what Julia's Base
 asks of its runtime, and says which fleet library is meant to answer each part.
