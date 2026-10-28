@@ -4,15 +4,17 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.2.0 completes M0 (oracle harness) and M1 (parser); M2 (lowering) is planned."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress."
 ---
 
-**go-embedded-julia is in development. [v0.2.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.2.0)
-(2026-10-26) completes milestone M0 (the oracle harness, against julia 1.12.6)
-and milestone M1 (the parser): a Go port of JuliaSyntax, `Expr`-identical to
-`Meta.parseall` on 1191 of 1191 files of julia's own tree.** Milestone M2
-(lowering) is planned. The interpreter itself does not exist yet: apart from the
-parser, these pages
+**go-embedded-julia is in development. [v0.3.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.3.0)
+(2026-10-28) completes milestone M0 (the oracle harness, against julia 1.12.6),
+milestone M1 (the parser): a Go port of JuliaSyntax, `Expr`-identical to
+`Meta.parseall` on 1191 of 1191 files of julia's own tree, and milestone M2
+(lowering): a Go port of julia 1.12.6's femtolisp front end, identical to
+`Meta.lower` on 53 997 of 53 997 forms of that tree.** Milestone M3 (the Core
+runtime) is in progress. The interpreter itself does not exist yet: apart from
+the parser, the lowering and the type system of the `core` package, these pages
 describe a plan, not a finished interpreter. Every statement comes from the
 bibliography of the [go-scikit roadmap](https://github.com/go-scikit/roadmap),
 [`bib/julia.md`](https://github.com/go-scikit/roadmap/blob/main/bib/julia.md).
@@ -21,9 +23,10 @@ bibliography of the [go-scikit roadmap](https://github.com/go-scikit/roadmap),
 
 A Julia interpreter written in pure Go, which can be embedded:
 
-- **JuliaSyntax and JuliaLowering ported to Go.** JuliaSyntax is Julia's parser
-  and JuliaLowering its lowering pass. A Go VM has no femtolisp, so the parser has
-  to be native before any Julia can run.
+- **Julia's parser and lowering ported to Go.** JuliaSyntax is Julia's parser;
+  julia 1.12.6 lowers with its femtolisp front end (`julia-syntax.scm`), which is
+  what the `lower` package ports. A Go VM has no femtolisp, so both have to be
+  native before any Julia can run.
 - **An interpreter over the lowered IR**, which runs **Julia's own Base
   unchanged**. Base is evaluated at build time and the resulting heap is shipped
   as an image.

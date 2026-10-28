@@ -9,9 +9,9 @@
 A [Hugo](https://gohugo.io/) site with the [tannevaled/hextra](https://github.com/tannevaled/hextra)
 fork of the [Hextra](https://github.com/imfing/hextra) theme (pinned to v0.16.0),
 built the same way as the [go-bignum documentation](https://github.com/go-bignum/docs),
-with go-embedded-julia's branding. The organization is **in development**, at
-milestones M0 (the oracle harness) and M1 (the parser) are done in
-go-embedded-julia/julia v0.2.0, and M2 (lowering) is planned: the site gives the plan and its milestones, the architecture, the runtime boundary
+with go-embedded-julia's branding. The organization is **in development**:
+milestones M0 (the oracle harness), M1 (the parser) and M2 (lowering) are done in
+go-embedded-julia/julia v0.3.0, and M3 (the Core runtime) is in progress: the site gives the plan and its milestones, the architecture, the runtime boundary
 with its counts, and the licences. Every statement comes from the bibliography of
 [go-scikit/roadmap](https://github.com/go-scikit/roadmap), `bib/julia.md`.
 
@@ -29,7 +29,7 @@ tagged:
 
 `https://go-embedded-julia.github.io/docs/` redirects to `latest/`. Each push to `main`
 replaces the directory of the version it describes, and nothing else. The interpreter
-is tagged v0.2.0, so the pages are published under `0.2/`, which `latest/` follows.
+is tagged v0.3.0, so the pages are published under `0.3/`, which `latest/` follows.
 
 ## Layout
 

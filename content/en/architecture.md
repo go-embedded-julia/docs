@@ -6,17 +6,18 @@ description: "The planned pipeline: a Go parser and lowering, a runtime in Go, B
 
 <!-- From go-scikit/roadmap bib/julia.md, sections 1, 2, 4.1, 5 and 6 (go-scikit/roadmap, main). Change the roadmap first, then here. Counts are from the sources at the revisions the bibliography names. -->
 
-**Status: the parser (M1) is released in v0.2.0; the rest is planned.** This page
-is the design the bibliography recommends. Only the parser is released, and where the bibliography
-says a point is unmeasured, this page says so.
+**Status: the parser (M1) is released in v0.2.0, the lowering (M2) and the
+type system of `core` in v0.3.0; the rest is planned.** This page is the design
+the bibliography recommends. Where the bibliography says a point is unmeasured,
+this page says so. The lowering section below records what was built.
 
 ## The pipeline
 
 ```
 source ──JuliaSyntax (Go port)──▶ Expr ──macroexpand──▶ Expr ──JuliaLowering (Go port)──▶ CodeInfo
    ──▶ toplevel eval (toplevel.c semantics) ──▶ method tables ──call──▶ dispatch (gf.c, typemap.c,
-       subtype.c) ──▶ interpreter over lowered IR (interpreter.c semantics) ──▶ builtins (83),
-       intrinsics (94), foreigncall shim table
+       subtype.c) ──▶ interpreter over lowered IR (interpreter.c semantics) ──▶ builtins (63 in
+       julia 1.12.6), intrinsics (93 in julia 1.12.6), foreigncall shim table
 ```
 
 This is the pipeline Julia's own developer documentation describes (`eval.md`),
@@ -80,7 +81,38 @@ inputs JuliaSyntax itself throws and julia falls back to femtolisp, which is not
 ported; there `ParseAll` returns `Expr(:error)` and `ParseAllLimits` an error
 wrapping `syntax.ErrParserFailed`.
 
-## Lowering: port JuliaLowering, keep `julia-syntax.scm` as the oracle
+## Lowering: what v0.3.0 built (M2)
+
+The risk below came true in the sense the bibliography allowed: julia 1.12.6
+lowers with the femtolisp front end by default and JuliaLowering is not part of
+the reference's `Meta.lower`, so M2 is a port of `julia-syntax.scm`, the code
+that produces the goldens. The `lower` package ports `julia-syntax.scm`,
+`macroexpand.scm`, `ast.scm` and `match.scm`, pass by pass: `expand-forms`,
+`resolve-scopes`, `analyze-variables!`, `closure-convert`, `linearize`, then
+renumbering into `CodeInfo`. Hygiene (`resolve-expansion-vars`,
+`rename-symbolic-labels`) is ported too.
+
+`lower.NewState().Lower(ex)` is `Meta.lower` of a macro-expanded top-level form:
+an `Expr(:thunk, CodeInfo)`, an atom, or `Expr(:error)`; one `State` per module,
+in file order. Macro expansion runs user code, so it stays with the caller, as in
+julia. Outputs are compared with julia's field by field, modulo gensym numbering
+(the counters live for a whole julia session, so two sessions differ).
+
+| measured on | forms | identical to julia |
+|---|---|---|
+| corpus (`share/julia`: base, Compiler, stdlib, test), 1191 files | 53 997 | 53 997 (1191/1191 files) |
+| lowering snippets | 124 | 124 |
+| macro-made toplevels still in hygienic scopes | 48 | 48 |
+| built expressions (error paths, rare heads) | 477 | 477 |
+| `deparse` vs `julia --lisp` | 119 | 119 |
+| front-end functions vs `julia --lisp` | 151 | 151 |
+
+Statement coverage is 100%, every expectation coming from julia. `Lower` refuses
+trees deeper than `lower.MaxDepth` (1000) with `lower.ErrLimit`, and `FuzzLower`
+runs on every pull request. **Known gap:** a `Float64` inside a lowering error
+message makes `Lower` return `lower.ErrUnsupported`.
+
+## Lowering: the design as planned, JuliaLowering vs `julia-syntax.scm`
 
 | | `src/julia-syntax.scm` (+ `macroexpand.scm`, `ast.scm`) | `JuliaLowering/src` |
 |---|---|---|
@@ -103,8 +135,8 @@ the reference binary, compared on `CodeInfo` after renumbering slots and SSA val
 | `jltypes.c` 4 728, `datatype.c` 3 200 | type objects: `DataType`, `UnionAll`, `Union`, `TypeVar`, `Vararg`, layout, type cache; field layout must match for `sizeof`, `fieldoffset`, `reinterpret` |
 | `subtype.c` 7 737 | `issubtype`, `type_intersection`, `morespecific`: the hardest part, with `test/subtype.jl` (3 666 lines) and `test/specificity.jl` as oracles |
 | `gf.c` 6 567, `typemap.c` 1 795, `method.c` 1 538 | method tables, dispatch cache, world ages, ambiguity |
-| `builtins.c` 3 161 | the 83 builtins, each a Go function |
-| `runtime_intrinsics.c` 1 862 | the 94 intrinsics |
+| `builtins.c` 3 161 | the builtins (63 in julia 1.12.6; 83 on 1.15-DEV, where the line counts were taken), each a Go function |
+| `runtime_intrinsics.c` 1 862 | the intrinsics (93 in julia 1.12.6; 94 on 1.15-DEV, where the line counts were taken) |
 | `interpreter.c` 1 118, `toplevel.c` 1 020 | the interpreter over `CodeInfo` and top-level eval |
 | `module.c` 2 504 | modules, bindings, binding partitions |
 | `genericmemory.c` 631, `array.c` 324 | `Memory{T}` and `MemoryRef`; `Array` is defined in Julia on top |
@@ -114,6 +146,12 @@ the reference binary, compared on `CodeInfo` after renumbering slots and SSA val
 `subtype.c` is where a reimplementation diverges silently (the diagonal rule,
 `Union` distribution, `Vararg`, `TypeVar` bounds). The plan is to port it
 statement by statement rather than from the paper.
+
+### Released so far: the `core` package (v0.3.0)
+
+core — Julia's type objects, apply_type, and subtyping (a port of jltypes.c and subtype.c of 1.12.6, without intersection): identical to julia on 20 000 random pairs and 4 902 cases from test/subtype.jl.
+
+`FuzzSubtype` runs on every pull request.
 
 ### The interpreter
 
