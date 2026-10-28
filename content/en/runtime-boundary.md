@@ -1,18 +1,21 @@
 ---
 title: "Runtime boundary"
 weight: 30
-description: "What the interpreter has to provide below Base: 94 intrinsics, 83 builtins, 896 ccall sites by target, regex and FFT. The counts."
+description: "What the interpreter has to provide below Base: 93 intrinsics and 63 builtins in julia 1.12.6, 896 ccall sites by target, regex and FFT. The counts."
 ---
 
 <!-- From go-scikit/roadmap bib/julia.md, section 3 (go-scikit/roadmap, main). The counts were made by a Go program over the Julia clones at the revisions the bibliography names, not by grep and not estimated. Change the roadmap first, then here. -->
 
-**Status: planned (milestones M3 to M5).** This page counts what Julia's Base
-asks of its runtime, and says which fleet library is meant to answer each part.
-Nothing here is implemented yet.
+**Status: planned (milestones M3 to M5); M3 is in progress.** This page counts
+what Julia's Base asks of its runtime, and says which fleet library is meant to
+answer each part. Of it, only the type system is implemented so far: the `core`
+package (v0.3.0) holds Julia's type objects, `apply_type` and subtyping.
 
-## Intrinsics: 94
+## Intrinsics: 93 in julia 1.12.6
 
-From `src/intrinsics.h`: 81 `ADD_I`, 12 `ALIAS` and 1 `ADD_HIDDEN`. By group:
+julia 1.12.6, the release the port follows, has **93** intrinsics. The breakdown
+below is the bibliography's, counted on julia 1.15-DEV sources, which have **94**:
+81 `ADD_I`, 12 `ALIAS` and 1 `ADD_HIDDEN` in `src/intrinsics.h`. By group (1.15-DEV):
 
 | Group | Count |
 |---|---|
@@ -38,9 +41,10 @@ choice is documented. `pointerref`, `pointerset` and the atomics work on the
 Go-side byte storage of `Memory` and `Ref`: there is no raw address space.
 `llvmcall` is not supported: Base has **0** `llvmcall(` sites.
 
-## Builtins: 83
+## Builtins: 63 in julia 1.12.6
 
-From `src/builtin_proto.h`: `getfield`, `setfield!`, `isa`, `===`, `<:`,
+julia 1.12.6 has **63** builtins; the bibliography counted 83 on julia 1.15-DEV
+sources. From `src/builtin_proto.h`: `getfield`, `setfield!`, `isa`, `===`, `<:`,
 `apply_type`, `_apply_iterate`, `invoke`, `memorynew`, the twelve `memoryref*`, the
 fourteen `*global*`, `_structtype`, `_typebody!` and the rest. Each is one Go
 function.
