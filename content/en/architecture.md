@@ -151,7 +151,11 @@ statement by statement rather than from the paper.
 
 core — Julia's type objects, apply_type, and subtyping (a port of jltypes.c and subtype.c of 1.12.6, without intersection): identical to julia on 20 000 random pairs and 4 902 cases from test/subtype.jl.
 
-`FuzzSubtype` runs on every pull request.
+`FuzzSubtype` runs on every pull request. Subtyping is 1.49× slower than julia's `jl_subtype` on one core (open defect).
+
+### Released so far: the `interp` package (v0.6.0)
+
+interp — a port of julia 1.12.6's `src/interpreter.c` that runs lowered code over Core. `interp.New().NewSession().Eval(src)` parses, lowers and runs a cell; `interp.Repr` shows the value as julia does. Core has the built-in types, boot.jl's exception types, 16 builtins and the integer and float intrinsics. 55 Core-only programs show the same value in Go and julia 1.12.6; 100% statement coverage; fuzzed (`FuzzEval`). Not yet: Base (`+`, `println`, `a.b`), macro expansion, boot.jl constructors and `where`, structs, arrays, `finally`; the speed against julia's interpreter is not measured yet.
 
 ### The interpreter
 
