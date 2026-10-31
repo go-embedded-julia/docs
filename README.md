@@ -11,7 +11,7 @@ fork of the [Hextra](https://github.com/imfing/hextra) theme (pinned to v0.16.0)
 built the same way as the [go-bignum documentation](https://github.com/go-bignum/docs),
 with go-embedded-julia's branding. The organization is **in development**:
 milestones M0 (the oracle harness), M1 (the parser) and M2 (lowering) are done in
-go-embedded-julia/julia v0.3.0, and M3 (the Core runtime) is in progress (v0.6.0 adds the package `interp`; v0.7.0 runs `struct` and `abstract type` definitions in it): the site gives the plan and its milestones, the architecture, the runtime boundary
+go-embedded-julia/julia v0.3.0, and M3 (the Core runtime) is in progress (v0.6.0 adds the package `interp`; v0.7.0 runs `struct` and `abstract type` definitions in it; v0.8.0 dispatches methods with `where` clauses): the site gives the plan and its milestones, the architecture, the runtime boundary
 with its counts, and the licences. Every statement comes from the bibliography of
 [go-scikit/roadmap](https://github.com/go-scikit/roadmap), `bib/julia.md`.
 
