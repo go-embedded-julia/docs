@@ -4,7 +4,7 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress, with types, subtyping, specificity and dispatch, and in v0.6.0 a first interpreter slice (package interp)."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress, with types, subtyping, specificity and dispatch, and in v0.6.0 and v0.7.0 an interpreter (package interp) that runs struct and abstract type definitions."
 ---
 
 **go-embedded-julia is in development. [v0.3.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.3.0)
@@ -13,20 +13,23 @@ milestone M1 (the parser): a Go port of JuliaSyntax, `Expr`-identical to
 `Meta.parseall` on 1191 of 1191 files of julia's own tree, and milestone M2
 (lowering): a Go port of julia 1.12.6's femtolisp front end, identical to
 `Meta.lower` on 53 997 of 53 997 forms of that tree.** Milestone M3 (the Core
-runtime) is in progress: [v0.6.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.6.0)
-(2026-10-31) adds the package `interp`, a port of julia 1.12.6's
-`src/interpreter.c` that runs lowered code over Core, on top of Julia's type
-objects, subtyping, method specificity and the dispatch of concrete calls
-(v0.5.0). `interp.New().NewSession().Eval(src)` parses, lowers and runs a cell;
-`interp.Repr` shows the value as julia does. Core has the built-in types,
-`boot.jl`'s exception types, 16 builtins and the integer and float intrinsics.
-55 Core-only programs show the same value in Go and in julia 1.12.6; statement
-coverage is 100% and `FuzzEval` fuzzes it. Not yet: Base (`+`, `println`, `a.b`),
-macro expansion, `boot.jl` constructors and `where`, structs, arrays and
-`finally`; the speed against julia's interpreter is not measured yet. The
-interpreter is therefore not finished: apart from the parser, the lowering, the
-`core` and `core/dispatch` packages and this first slice of `interp`, these pages
-describe a plan. Every statement comes from the
+runtime) is in progress: [v0.7.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.7.0)
+(2026-10-31) extends the package `interp`, a port of julia 1.12.6's
+`src/interpreter.c` that runs lowered code over Core (added in v0.6.0), on top of
+Julia's type objects, subtyping, method specificity and the dispatch of concrete
+calls (v0.5.0). `struct` and `abstract type` definitions now run, with julia's
+default constructors (`jl_ctor_def`) and user-defined outer constructors;
+calling a type dispatches on its constructors. `interp.New().NewSession().Eval(src)`
+parses, lowers and runs a cell; `interp.Repr` shows the value as julia does. Core
+has the built-in types, the exception and AST types of `boot.jl` and
+`jltypes.c`, 23 builtins and the integer and float intrinsics. 65 Core-only
+programs show the same value in Go and in julia 1.12.6; statement coverage is
+100% and `FuzzEval` fuzzes it. Not yet: Base (`+`, `println`, `a.b`, and a
+constructor call whose argument needs `convert`), macro expansion, types with
+parameters and `where`, `const` and atomic fields, arrays and `finally`; the
+speed against julia's interpreter is not measured yet. The interpreter is
+therefore not finished: apart from the parser, the lowering, the `core` and
+`core/dispatch` packages and this part of `interp`, these pages describe a plan. Every statement comes from the
 bibliography of the [go-scikit roadmap](https://github.com/go-scikit/roadmap),
 [`bib/julia.md`](https://github.com/go-scikit/roadmap/blob/main/bib/julia.md).
 
