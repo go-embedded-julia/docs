@@ -4,7 +4,7 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress, with types, subtyping, specificity and dispatch, and from v0.6.0 to v0.8.0 an interpreter (package interp) that runs struct and abstract type definitions and methods with where clauses."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress, with types, subtyping, specificity and dispatch, and from v0.6.0 to v0.9.0 an interpreter (package interp) that runs struct and abstract type definitions, with parameters, and methods with where clauses."
 ---
 
 **go-embedded-julia is in development. [v0.3.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.3.0)
@@ -13,7 +13,7 @@ milestone M1 (the parser): a Go port of JuliaSyntax, `Expr`-identical to
 `Meta.parseall` on 1191 of 1191 files of julia's own tree, and milestone M2
 (lowering): a Go port of julia 1.12.6's femtolisp front end, identical to
 `Meta.lower` on 53 997 of 53 997 forms of that tree.** Milestone M3 (the Core
-runtime) is in progress: [v0.8.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.8.0)
+runtime) is in progress: [v0.9.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.9.0)
 (2026-10-31) extends the package `interp`, a port of julia 1.12.6's
 `src/interpreter.c` that runs lowered code over Core (added in v0.6.0), on top of
 Julia's type objects, subtyping, method specificity and the dispatch of concrete
@@ -22,14 +22,19 @@ default constructors (`jl_ctor_def`) and user-defined outer constructors;
 calling a type dispatches on its constructors. Methods with `where` clauses now
 dispatch with static parameters (for example `f(x::T) where {T<:Integer} = T`),
 through the `TypeVar` and `UnionAll` constructors of `boot.jl` (lines 335-338),
-built in Go until `boot.jl` runs. `interp.New().NewSession().Eval(src)`
+built in Go until `boot.jl` runs. Structs and abstract types with parameters
+(`struct Q{T}`, `abstract type A{T}`) run too (v0.9.0): `Q(1)` infers
+`Q{Int64}`, `Q{Integer}(1)` runs the inner constructor, and a parameter no field
+constrains gets no outer constructor, as `jl_ctor_def` decides; constructor
+signatures keep the called type first, as in julia's one method table, and a type
+argument dispatches as `Type{X}`. `interp.New().NewSession().Eval(src)`
 parses, lowers and runs a cell; `interp.Repr` shows the value as julia does. Core
 has the built-in types, the exception and AST types of `boot.jl` and
-`jltypes.c`, 24 builtins (`_typevar` is new) and the integer and float intrinsics. 76 Core-only
+`jltypes.c`, 24 builtins and the integer and float intrinsics. 85 Core-only
 programs show the same value in Go and in julia 1.12.6; statement coverage is
 100% and `FuzzEval` fuzzes it. Not yet: Base (`+`, `println`, `a.b`, and a
-constructor call whose argument needs `convert`), macro expansion, structs with
-parameters (`struct Q{T}`), `const` and atomic fields, arrays and `finally`; the
+constructor call whose argument needs `convert`), macro expansion, redefining a
+struct that has parameters (it needs `Base.getproperty`), `const` and atomic fields, arrays and `finally`; the
 speed against julia's interpreter is not measured yet. The interpreter is
 therefore not finished: apart from the parser, the lowering, the `core` and
 `core/dispatch` packages and this part of `interp`, these pages describe a plan. Every statement comes from the
