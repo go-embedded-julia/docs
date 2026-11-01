@@ -4,7 +4,7 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress, with types, subtyping, specificity and dispatch, and from v0.6.0 to v0.11.0 an interpreter (package interp) that runs struct and abstract type definitions, with parameters, methods with where clauses and macro expansion, and (v0.11.0) boots Core from julia's own boot.jl."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress, with types, subtyping, specificity and dispatch, and from v0.6.0 to v0.12.0 an interpreter (package interp) that runs struct and abstract type definitions, with parameters, methods with where clauses and macro expansion, and (v0.11.0) boots Core from julia's own boot.jl and (v0.12.0) runs julia's arrays."
 ---
 
 **go-embedded-julia is in development. [v0.3.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.3.0)
@@ -13,7 +13,7 @@ milestone M1 (the parser): a Go port of JuliaSyntax, `Expr`-identical to
 `Meta.parseall` on 1191 of 1191 files of julia's own tree, and milestone M2
 (lowering): a Go port of julia 1.12.6's femtolisp front end, identical to
 `Meta.lower` on 53 997 of 53 997 forms of that tree.** Milestone M3 (the Core
-runtime) is in progress: [v0.11.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.11.0)
+runtime) is in progress: [v0.12.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.12.0)
 (2026-11-01) extends the package `interp`, a port of julia 1.12.6's
 `src/interpreter.c` that runs lowered code over Core (added in v0.6.0), on top of
 Julia's type objects, subtyping, method specificity and the dispatch of concrete
@@ -40,7 +40,18 @@ types and an error in an included file is a `LoadError`; after Boot,
 `interp.New().NewSession().Eval` is unchanged. `include` reads only `VM.Sources`
 (julia's embedded sources), never the host's filesystem. `Boot` has no julia
 counterpart to measure against, since julia's Core comes from its system image.
-Not yet: arrays as values programs use (an Expr's `args`), and Base.
+Arrays are julia 1.11+'s (v0.12.0): `GenericMemory` and `GenericMemoryRef`
+values with the builtins `memorynew`, `memoryrefnew`, `memoryrefoffset`,
+`memoryrefget`, `memoryrefset!` and `memoryref_isassigned` (builtins.c:1711-1856,
+genericmemory.c, with julia's checks and messages), and `Array{T,N}(undef, dims…)`
+as boot.jl builds it, with the overflow-checked integer intrinsics
+`checked_[su]{add,sub,mul}_int`. Arrays and types with where clauses are shown as
+julia 1.12.6 shows them (`Int8[1, 2]`, `[1 2 3; 4 5 6]`, `Vector{Int64}`). An
+Expr's `args` is one `Vector{Any}` per expression. `VM.MaxMemoryElems` (16 Mi
+elements by default) bounds one allocation (`interp.ErrMemoryLimit`); the total a
+VM allocates is not bounded yet (issue #24). Speed is not measured: there is no
+julia counterpart until programs index arrays through Base. Not yet: atomic
+memory, and Base.
 `interp.New().NewSession().Eval(src)`
 parses, lowers and runs a cell; `interp.Repr` shows the value as julia does. Core
 has the built-in types, the exception and AST types of `boot.jl` and
