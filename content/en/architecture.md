@@ -151,7 +151,7 @@ statement by statement rather than from the paper.
 
 core — Julia's type objects, apply_type, and subtyping (a port of jltypes.c and subtype.c of 1.12.6, without intersection): identical to julia on 20 000 random pairs and 4 902 cases from test/subtype.jl.
 
-`FuzzSubtype` runs on every pull request. Subtyping is 1.49× slower than julia's `jl_subtype` on one core (open defect).
+`FuzzSubtype` runs on every pull request. Subtyping is 1.37× slower than julia's `jl_subtype` on one core (3.26 ms against 2.39 ms for the 20 000 pairs, best of 7 interleaved rounds, load 4.4–6.6, 2026-11-01), an open defect: [#20](https://github.com/go-embedded-julia/julia/issues/20). It was 1.43× before the query environments were pooled (v0.9.1), which halved the allocations (−51%, −66% of bytes); the time gain of the pooling alone is not confirmed at low load.
 
 ### Released so far: the `interp` package (v0.6.0 to v0.9.0)
 
