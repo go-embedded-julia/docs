@@ -4,7 +4,7 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress, with types, subtyping, specificity and dispatch, and from v0.6.0 to v0.10.0 an interpreter (package interp) that runs struct and abstract type definitions, with parameters, methods with where clauses and macro expansion."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress, with types, subtyping, specificity and dispatch, and from v0.6.0 to v0.11.0 an interpreter (package interp) that runs struct and abstract type definitions, with parameters, methods with where clauses and macro expansion, and (v0.11.0) boots Core from julia's own boot.jl."
 ---
 
 **go-embedded-julia is in development. [v0.3.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.3.0)
@@ -13,7 +13,7 @@ milestone M1 (the parser): a Go port of JuliaSyntax, `Expr`-identical to
 `Meta.parseall` on 1191 of 1191 files of julia's own tree, and milestone M2
 (lowering): a Go port of julia 1.12.6's femtolisp front end, identical to
 `Meta.lower` on 53 997 of 53 997 forms of that tree.** Milestone M3 (the Core
-runtime) is in progress: [v0.10.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.10.0)
+runtime) is in progress: [v0.11.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.11.0)
 (2026-11-01) extends the package `interp`, a port of julia 1.12.6's
 `src/interpreter.c` that runs lowered code over Core (added in v0.6.0), on top of
 Julia's type objects, subtyping, method specificity and the dispatch of concrete
@@ -32,6 +32,15 @@ a port of `jl_expand_macros`: a macro call runs the macro's method with
 `__source__` and `__module__`, nested and recursive calls are expanded in turn,
 hygiene goes through the `hygienic-scope` that `lower` resolves, and quotes go
 through `lower.Backquote`; a self-expanding macro raises `StackOverflowError`.
+Core is now defined by julia 1.12.6's own `base/boot.jl`, unmodified and embedded
+(v0.11.0): `vm.Boot()` evaluates its 363 forms in Core, then runs
+`post_boot_hooks` (jltypes.c:3909-3968), so builtins raise boot.jl's exception
+types and an error in an included file is a `LoadError`; after Boot,
+`vm.CoreSession().Eval(src)` runs code in Core. Boot is opt-in:
+`interp.New().NewSession().Eval` is unchanged. `include` reads only `VM.Sources`
+(julia's embedded sources), never the host's filesystem. `Boot` has no julia
+counterpart to measure against, since julia's Core comes from its system image.
+Not yet: arrays as values programs use (an Expr's `args`), and Base.
 `interp.New().NewSession().Eval(src)`
 parses, lowers and runs a cell; `interp.Repr` shows the value as julia does. Core
 has the built-in types, the exception and AST types of `boot.jl` and

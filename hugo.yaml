@@ -5,7 +5,7 @@
 # minor version among the libraries the pages describe (0.1, 0.2, ...), or
 # "main" while none of them is tagged. The CI sets it through --baseURL, from
 # params.libraries below. This default is the same build.
-baseURL: "https://go-embedded-julia.github.io/docs/0.10/"
+baseURL: "https://go-embedded-julia.github.io/docs/0.11/"
 title: "go-embedded-julia"
 # themes/hextra is the tannevaled/hextra fork, pinned at a release tag:
 # upstream Hextra plus opt-in features (partial menu items, combos,
@@ -83,14 +83,14 @@ menu:
         icon: github
 
 params:
-  description: "go-embedded-julia (in development, v0.10.0: milestones M0, the oracle harness, M1, the parser, and M2, the lowering, are done; M3, the Core runtime, has types, subtyping, specificity, dispatch and an interpreter that runs struct and abstract type definitions, with parameters, methods with where clauses and macro expansion):a Julia interpreter in pure Go that can be embedded, for the julia cells of go-notebook and its WebAssembly playground."
+  description: "go-embedded-julia (in development, v0.11.0:milestones M0, the oracle harness, M1, the parser, and M2, the lowering, are done; M3, the Core runtime, has types, subtyping, specificity, dispatch and an interpreter that runs struct and abstract type definitions, with parameters, methods with where clauses and macro expansion, and boots Core from julia's own boot.jl):a Julia interpreter in pure Go that can be embedded, for the julia cells of go-notebook and its WebAssembly playground."
 
   # The release of each library these pages describe, "main" while it has no
   # tag. The newest minor version among the tagged ones is the documentation's
   # version label (v0.1.2 -> 0.1): the CI reads it here. The interpreter is
-  # tagged v0.10.0, so the documentation is version 0.10.
+  # tagged v0.11.0, so the documentation is version 0.11.
   libraries:
-    julia: "v0.10.0"
+    julia: "v0.11.0"
   versions:
     # The version selector shows "main" with the development icon.
     development: "main"
