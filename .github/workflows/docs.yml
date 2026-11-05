@@ -71,7 +71,7 @@ jobs:
           version=$(printf '%s\n' "${minors}" | sed '/^$/d' | sort -t. -k1,1nr -k2,2nr | sed -n 1p)
           version=${version:-main}
           echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "libraries: $(echo ${libs}); documentation version ${version}"
+          echo "libraries: ${libs//$'\n'/ }; documentation version ${version}"
 
       # Each page's creation (first commit, followed across renames) and its
       # author, for the page history at its foot (params.page.history).
