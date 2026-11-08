@@ -41,10 +41,25 @@ jobs:
           # The whole history: each page's creation and modification come from git.
           fetch-depth: 0
 
+      # The verified tarball is cached, keyed on the version and its checksum,
+      # so a cache hit needs no download; a miss retries the download (github.com
+      # answers release downloads with 503 and 504 at times). The checksum is
+      # checked in both cases, and a tarball that fails it is never cached
+      # (the cache is saved only when the job succeeds).
+      - name: Cache the Hugo tarball
+        id: hugo-cache
+        uses: actions/cache@v6
+        with:
+          path: /tmp/hugo.tar.gz
+          key: hugo-${{ env.HUGO_VERSION }}-${{ env.HUGO_SHA256 }}
+
       - name: Install Hugo ${{ env.HUGO_VERSION }}
         run: |
-          curl -fsSL -o /tmp/hugo.tar.gz \
-            "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz"
+          if [ "${{ steps.hugo-cache.outputs.cache-hit }}" != "true" ]; then
+            curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors --connect-timeout 30 \
+              -o /tmp/hugo.tar.gz \
+              "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz"
+          fi
           echo "${HUGO_SHA256}  /tmp/hugo.tar.gz" | sha256sum -c -
           sudo tar -xzf /tmp/hugo.tar.gz -C /usr/local/bin hugo
           hugo version
