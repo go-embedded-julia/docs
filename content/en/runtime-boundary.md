@@ -6,10 +6,14 @@ description: "What the interpreter has to provide below Base: 93 intrinsics and 
 
 <!-- From go-scikit/roadmap bib/julia.md, section 3 (go-scikit/roadmap, main). The counts were made by a Go program over the Julia clones at the revisions the bibliography names, not by grep and not estimated. Change the roadmap first, then here. -->
 
-**Status: planned (milestones M3 to M5); M3 is in progress.** This page counts
+**Status: M3 is done (v0.13.0); M4 and M5 are planned.** This page counts
 what Julia's Base asks of its runtime, and says which fleet library is meant to
-answer each part. Of it, only the type system is implemented so far: the `core`
-package (v0.3.0) holds Julia's type objects, `apply_type` and subtyping.
+answer each part. As of v0.13.0, Base runs: the type system (`core`), the tasks
+and the libuv loop, the VFS and the dynamic libraries the VM implements in Go
+(GMP, MPFR, PCRE2 and dSFMT so far) are in place, and loading a C library is a
+stated divergence. Not yet: BLAS kernels
+([#33](https://github.com/go-embedded-julia/julia/issues/33)), and the stdlibs
+rewritten in Go ([#36](https://github.com/go-embedded-julia/julia/issues/36)).
 
 ## Intrinsics: 93 in julia 1.12.6
 
