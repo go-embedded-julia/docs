@@ -4,70 +4,61 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.3.0 completes M0 (oracle harness), M1 (parser) and M2 (lowering); M3 (Core runtime) is in progress, with types, subtyping, specificity and dispatch, and from v0.6.0 to v0.12.0 an interpreter (package interp) that runs struct and abstract type definitions, with parameters, methods with where clauses and macro expansion, and (v0.11.0) boots Core from julia's own boot.jl and (v0.12.0) runs julia's arrays."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.13.0 completes M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime): julia 1.12.6's real Base and seven stdlibs build and initialize, with tasks, an event loop and a two-mode virtual file system."
 ---
 
-**go-embedded-julia is in development. [v0.3.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.3.0)
-(2026-10-28) completes milestone M0 (the oracle harness, against julia 1.12.6),
-milestone M1 (the parser): a Go port of JuliaSyntax, `Expr`-identical to
-`Meta.parseall` on 1191 of 1191 files of julia's own tree, and milestone M2
-(lowering): a Go port of julia 1.12.6's femtolisp front end, identical to
-`Meta.lower` on 53 997 of 53 997 forms of that tree.** Milestone M3 (the Core
-runtime) is in progress: [v0.12.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.12.0)
-(2026-11-01) extends the package `interp`, a port of julia 1.12.6's
-`src/interpreter.c` that runs lowered code over Core (added in v0.6.0), on top of
-Julia's type objects, subtyping, method specificity and the dispatch of concrete
-calls (v0.5.0). `struct` and `abstract type` definitions run (v0.7.0), with julia's
-default constructors (`jl_ctor_def`) and user-defined outer constructors;
-calling a type dispatches on its constructors. Methods with `where` clauses now
-dispatch with static parameters (for example `f(x::T) where {T<:Integer} = T`),
-through the `TypeVar` and `UnionAll` constructors of `boot.jl` (lines 335-338),
-built in Go until `boot.jl` runs. Structs and abstract types with parameters
-(`struct Q{T}`, `abstract type A{T}`) run too (v0.9.0): `Q(1)` infers
-`Q{Int64}`, `Q{Integer}(1)` runs the inner constructor, and a parameter no field
-constrains gets no outer constructor, as `jl_ctor_def` decides; constructor
-signatures keep the called type first, as in julia's one method table, and a type
-argument dispatches as `Type{X}`. Macros are expanded before lowering (v0.10.0),
-a port of `jl_expand_macros`: a macro call runs the macro's method with
-`__source__` and `__module__`, nested and recursive calls are expanded in turn,
-hygiene goes through the `hygienic-scope` that `lower` resolves, and quotes go
-through `lower.Backquote`; a self-expanding macro raises `StackOverflowError`.
-Core is now defined by julia 1.12.6's own `base/boot.jl`, unmodified and embedded
-(v0.11.0): `vm.Boot()` evaluates its 363 forms in Core, then runs
-`post_boot_hooks` (jltypes.c:3909-3968), so builtins raise boot.jl's exception
-types and an error in an included file is a `LoadError`; after Boot,
-`vm.CoreSession().Eval(src)` runs code in Core. Boot is opt-in:
-`interp.New().NewSession().Eval` is unchanged. `include` reads only `VM.Sources`
-(julia's embedded sources), never the host's filesystem. `Boot` has no julia
-counterpart to measure against, since julia's Core comes from its system image.
-Arrays are julia 1.11+'s (v0.12.0): `GenericMemory` and `GenericMemoryRef`
-values with the builtins `memorynew`, `memoryrefnew`, `memoryrefoffset`,
-`memoryrefget`, `memoryrefset!` and `memoryref_isassigned` (builtins.c:1711-1856,
-genericmemory.c, with julia's checks and messages), and `Array{T,N}(undef, dims…)`
-as boot.jl builds it, with the overflow-checked integer intrinsics
-`checked_[su]{add,sub,mul}_int`. Arrays and types with where clauses are shown as
-julia 1.12.6 shows them (`Int8[1, 2]`, `[1 2 3; 4 5 6]`, `Vector{Int64}`). An
-Expr's `args` is one `Vector{Any}` per expression. `VM.MaxMemoryElems` (16 Mi
-elements by default) bounds one allocation (`interp.ErrMemoryLimit`); the total a
-VM allocates is not bounded yet (issue #24). Speed is not measured: there is no
-julia counterpart until programs index arrays through Base. Not yet: atomic
-memory, and Base.
-`interp.New().NewSession().Eval(src)`
-parses, lowers and runs a cell; `interp.Repr` shows the value as julia does. Core
-has the built-in types, the exception and AST types of `boot.jl` and
-`jltypes.c` (with the `QuoteNode`, `LineNumberNode` and `Expr` constructors), 26
-builtins (`_expr` and `_apply_iterate` are new) and the integer and float intrinsics. 97 Core-only
-programs show the same value in Go and in julia 1.12.6; statement coverage is
-100% and `FuzzEval` fuzzes it. Not yet: Base (`+`, `println`, `a.b`, and a
-constructor call whose argument needs `convert`, macros that use `esc` or Base's
-macros), splatting anything but a tuple or a simple vector (it calls
-`Base.iterate`), redefining a
-struct that has parameters (it needs `Base.getproperty`), `const` and atomic fields, arrays and `finally`; the
-speed against julia's interpreter is not measured yet. The interpreter is
-therefore not finished: apart from the parser, the lowering, the `core` and
-`core/dispatch` packages and this part of `interp`, these pages describe a plan. Every statement comes from the
+**go-embedded-julia is in development. [v0.13.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.13.0)
+(2026-11-14) completes milestone M3 (the runtime): the interpreter runs julia
+1.12.6's real Base and its seven stdlibs.** It follows milestone M0 (the oracle
+harness, against julia 1.12.6), milestone M1 (the parser): a Go port of
+JuliaSyntax, `Expr`-identical to `Meta.parseall` on 1191 of 1191 files of julia's
+own tree, and milestone M2 (lowering): a Go port of julia 1.12.6's femtolisp front
+end, identical to `Meta.lower` on 53 997 of 53 997 forms of that tree
+([v0.3.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.3.0),
+2026-10-28).
+
+What M3 holds, in v0.13.0:
+
+- **Base and seven stdlibs.** `sysimg.jl` builds the whole system image;
+  `VM.RunModuleInitializers` runs `Base.__init__` and the `__init__` of FileWatching,
+  Libdl, Artifacts, SHA, Sockets, LinearAlgebra and Random. 16 Base-level task
+  programs (`@async`, `Channel`, `Condition`, `Timer`, `sleep`, `ReentrantLock`,
+  `Threads.@spawn`, `ScopedValue`) give julia's own text/plain output.
+- **Tasks and the event loop.** One goroutine per task with a baton, the per-task
+  state saved at each switch, a libuv loop written in Go, `@cfunction`, and
+  `ErrDeadlock` for a wait that nothing can end, where julia would hang.
+- **A VFS in two modes.** The sandbox (julia's own tree, read-only) and host mode
+  (the real file system on macOS, Linux and Windows).
+- **Dynamic libraries** are the libraries the VM implements in Go.
+  libblastrampoline reports julia's configuration. Loading a C library is a stated
+  divergence.
+- **Portability.** It builds on every Go target and is tested on 386, arm, riscv64,
+  s390x, ppc64le and loong64 (floats are bit-exact independently of the FPU), and
+  on macOS, Linux and Windows.
+
+It stands on the earlier M3 releases: Julia's type objects, subtyping and method
+specificity, and the dispatch of concrete calls (`core`, `core/dispatch`), and the
+package `interp`, a port of julia 1.12.6's `src/interpreter.c` (v0.6.0 to v0.12.0:
+`struct` and `abstract type` definitions, methods with `where` clauses, macro
+expansion, `boot.jl`, arrays). The details are in [Architecture]({{< relref "architecture" >}}).
+
+**Known limits of v0.13.0:**
+
+- `[@async i^2 for i in 1:4]` is correct but takes minutes; this is under
+  investigation.
+- The stdlibs are still julia's `.jl` sources; rewriting them in Go is
+  [#36](https://github.com/go-embedded-julia/julia/issues/36).
+- No BLAS kernel computes yet
+  ([#33](https://github.com/go-embedded-julia/julia/issues/33)).
+- Writing a file in host mode is not ported yet
+  ([#32](https://github.com/go-embedded-julia/julia/issues/32)).
+- Loading a C library is a stated divergence from julia (see above).
+
+M4 to M7 are planned: the interpreter is therefore not finished, and the pages
+that describe them describe a plan. Every statement comes from the
 bibliography of the [go-scikit roadmap](https://github.com/go-scikit/roadmap),
-[`bib/julia.md`](https://github.com/go-scikit/roadmap/blob/main/bib/julia.md).
+[`bib/julia.md`](https://github.com/go-scikit/roadmap/blob/main/bib/julia.md), and
+from the release notes of each version.
 
 ## What it will be
 
