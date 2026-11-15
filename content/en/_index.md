@@ -99,6 +99,7 @@ of each later milestone will be stated once it is measured.
 | --- | --- |
 | [Plan]({{< relref "plan" >}}) | milestones M0 to M7 with their size and exit test, what the playground shows at each, and how conformance is measured |
 | [Architecture]({{< relref "architecture" >}}) | the pipeline, the parser (with its usage), the lowering, the runtime in Go, type inference, the Base bootstrap and the image |
+| [Kernel]({{< relref "kernel" >}}) | the prebuilt system image pinned by its SHA-256, `FetchKernel`, `Eval` per cell, cancellation, budgets and the sandbox |
 | [Runtime boundary]({{< relref "runtime-boundary" >}}) | the counts: intrinsics, builtins, `ccall` sites by target, regex, FFT |
 | [Licences]({{< relref "licences" >}}) | what may be translated, what is run or replaced, and the GPL parts avoided |
 
