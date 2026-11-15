@@ -4,12 +4,16 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.13.0 completes M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime): julia 1.12.6's real Base and seven stdlibs build and initialize, with tasks, an event loop and a two-mode virtual file system."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.17.0 has M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime) done, julia 1.12.6's real Base and seven stdlibs loaded from a pinned prebuilt image, and a Kernel that runs notebook cells with Go values in and out."
 ---
 
-**go-embedded-julia is in development. [v0.13.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.13.0)
-(2026-11-14) completes milestone M3 (the runtime): the interpreter runs julia
-1.12.6's real Base and its seven stdlibs.** It follows milestone M0 (the oracle
+**go-embedded-julia is in development. The current release is [v0.17.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.17.0):
+the interpreter runs julia 1.12.6's real Base and its seven stdlibs, a VM loads
+them from a prebuilt system image pinned by its SHA-256, and a `Kernel` runs
+notebook cells with the REPL's soft scope, julia's own error texts, budgets,
+cancellation, and `Get` and `Set` of Go values.** Milestone M3 (the runtime) was
+completed by [v0.13.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.13.0)
+(2026-11-14); the image is v0.14.0 and the `Kernel` v0.15.0, see [Kernel]({{< relref "kernel" >}}). It follows milestone M0 (the oracle
 harness, against julia 1.12.6), milestone M1 (the parser): a Go port of
 JuliaSyntax, `Expr`-identical to `Meta.parseall` on 1191 of 1191 files of julia's
 own tree, and milestone M2 (lowering): a Go port of julia 1.12.6's femtolisp front
@@ -42,10 +46,15 @@ package `interp`, a port of julia 1.12.6's `src/interpreter.c` (v0.6.0 to v0.12.
 `struct` and `abstract type` definitions, methods with `where` clauses, macro
 expansion, `boot.jl`, arrays). The details are in [Architecture]({{< relref "architecture" >}}).
 
-**Known limits of v0.13.0:**
+**Known limits of v0.17.0:**
 
 - `[@async i^2 for i in 1:4]` is correct but takes minutes; this is under
   investigation.
+- An image is not authenticated by itself, and loading one writes process-shared
+  type state: pin its digest
+  ([#49](https://github.com/go-embedded-julia/julia/issues/49)).
+- `uppercase`, `lowercase` and the other functions that call `utf8proc` are not
+  ported ([#65](https://github.com/go-embedded-julia/julia/issues/65)).
 - The stdlibs are still julia's `.jl` sources; rewriting them in Go is
   [#36](https://github.com/go-embedded-julia/julia/issues/36).
 - No BLAS kernel computes yet

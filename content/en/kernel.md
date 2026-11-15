@@ -1,10 +1,11 @@
 ---
 title: "Running cells: Kernel and the system image"
 weight: 25
-description: "How a program loads the prebuilt system image by its pinned SHA-256 and runs notebook cells on it: FetchKernel, Eval, cancellation, budgets and the sandbox."
+description: "How a program loads the prebuilt system image by its pinned SHA-256 and runs notebook cells on it: FetchKernel, Eval, soft scope, cancellation, budgets, the sandbox, and Get and Set of Go values."
 ---
 
-**Status: released in v0.14.0 (the image) and v0.15.0 (`Kernel`).** This page
+**Status: released in v0.14.0 (the image) and v0.15.0 (`Kernel`); current in
+v0.17.0, with soft scope, julia's `MethodError` text, and `Get` and `Set`.** This page
 is the usage of the package `interp` for a notebook: how a VM starts in about a
 second instead of building Base for 13 minutes, and how a cell runs on it. The
 README of the repository holds the same flow in brief.
@@ -50,6 +51,43 @@ r := k.Eval(ctx, `f(x) = x + 1; f(41)`)
 A cell that throws is a value, and the next cell runs. A cell defines names in
 `Main`; functions, structs and redefined methods persist from cell to cell.
 
+The text of an error is julia's own `showerror`, `MethodError` included (the
+"Closest candidates" list, the ambiguity and its proposed fix, the keyword and
+world-age hints), compared character for character with julia 1.12.6 on the
+cases the test suite lists.
+
+**Soft scope.** Cells run as the REPL and IJulia run them (`REPL.softscope`): a
+loop or a block at the top of a cell assigns to a global that exists instead of
+making a local, so `s = 0` in one cell and `for i in 1:10; s += i; end` in the
+next gives `s == 55`. `CellOptions{HardScope: true}` gives the scope of a file
+(`include_string`) instead.
+
+## Go values in and out: Get and Set
+
+`k.Get(name)` reads a global of `Main` as a Go value and `k.Set(name, v)`
+assigns one, as a cell `name = v` would, also over an existing binding. Both
+copy, never alias, and are refused with `ErrKernelBusy` while a cell runs.
+
+| julia | Go |
+| --- | --- |
+| `Int64` | `int64` (`Set` also takes an `int`) |
+| `Float64` | `float64`, every bit kept: NaN payloads, `-0.0` |
+| `Bool`, `String` | `bool`, `string` |
+| `Vector{Float64}`, `Vector{Int64}` | `[]float64`, `[]int64` |
+| `Matrix{Float64}`, `Matrix{Int64}` | `interp.Matrix[float64]`, `interp.Matrix[int64]`: `Rows`, `Cols`, `Data` column-major, `At(i, j)` |
+
+```go
+k.Set("v", []float64{1, 2, 3.5})
+k.Eval(ctx, "w = v .* 2")
+w, ok, err := k.Get("w") // []float64{2, 4, 7}
+```
+
+`Get` answers `(value, ok, err)`: `ok` is false for a name that is not bound; a
+value of any other type is a `*ConversionError` (`errors.Is(err, ErrKernelType)`)
+that names the julia type, and `Set` of a Go type outside the table names the Go
+type. A name that is no identifier is `ErrKernelName`, and an array over
+`VM.MaxMemoryElems` is `ErrMemoryLimit`.
+
 ## Cancellation and budgets
 
 Cancelling `ctx` raises `InterruptException` in the running cell (`Eval`
@@ -81,13 +119,14 @@ at its load.
 
 ## Known limits
 
-- Cells use hard scope (as `include_string`), not the REPL's soft scope: at the
-  top level, `x = 0; while …; x += 1; end` makes `x` local
-  ([#54](https://github.com/go-embedded-julia/julia/issues/54)).
-- `showerror` of a `MethodError` calls `jl_methtable_lookup`, which is not
-  ported: the error is a `*JuliaError` of the right type and its message is the
-  Go repr
-  ([#55](https://github.com/go-embedded-julia/julia/issues/55)).
+- The candidates of a `MethodError` whose candidates are all equally close
+  (`sin()`) list in the order of the method table, which in julia depends on
+  hashes that mix in each module's random build id: that order is one system
+  image's and is not reproduced.
+- `uppercase`, `lowercase` and the functions that call `utf8proc` are not ported
+  ([#65](https://github.com/go-embedded-julia/julia/issues/65)); a BLAS kernel
+  such as `A * x` does not compute yet
+  ([#33](https://github.com/go-embedded-julia/julia/issues/33)).
 - A VM without Base (`Boot()` only) shows values and errors as the Go repr and
   cells use `Core`'s names.
 - The image is not authenticated by itself

@@ -11,7 +11,7 @@ fork of the [Hextra](https://github.com/imfing/hextra) theme (pinned to v0.16.0)
 built the same way as the [go-bignum documentation](https://github.com/go-bignum/docs),
 with go-embedded-julia's branding. The organization is **in development**:
 milestones M0 (the oracle harness), M1 (the parser) and M2 (lowering) are done in
-go-embedded-julia/julia v0.3.0, and M3 (the runtime) in v0.13.0 (julia 1.12.6's real Base and seven stdlibs run, with tasks, an event loop and a two-mode VFS; known limits: stdlibs still `.jl`, no BLAS kernels, no host-mode file writes): the site gives the plan and its milestones, the architecture, the runtime boundary
+go-embedded-julia/julia v0.3.0, and M3 (the runtime) in v0.13.0 (julia 1.12.6's real Base and seven stdlibs run, with tasks, an event loop and a two-mode VFS; known limits: stdlibs still `.jl`, no BLAS kernels, no host-mode file writes); the current release is v0.17.0 (the prebuilt image, the notebook `Kernel` with `Get` and `Set`): the site gives the plan and its milestones, the architecture, the runtime boundary
 with its counts, and the licences. Every statement comes from the bibliography of
 [go-scikit/roadmap](https://github.com/go-scikit/roadmap), `bib/julia.md`.
 
@@ -29,7 +29,8 @@ tagged:
 
 `https://go-embedded-julia.github.io/docs/` redirects to `latest/`. Each push to `main`
 replaces the directory of the version it describes, and nothing else. The interpreter
-is tagged v0.13.0, so the pages are published under `0.13/`, which `latest/` follows.
+is tagged v0.17.0, so the pages are published under `0.17/`, which `latest/` follows
+(`0.13/` stays as it was published).
 
 ## Layout
 
