@@ -1,11 +1,12 @@
 ---
 title: "Running cells: Kernel and the system image"
 weight: 25
-description: "How a program loads the prebuilt system image by its pinned SHA-256 and runs notebook cells on it: FetchKernel, Eval, soft scope, cancellation, budgets, the sandbox, and Get and Set of Go values."
+description: "How a program loads the prebuilt system image by its pinned SHA-256 and runs notebook cells on it: FetchKernel, Eval, soft scope, cancellation, budgets, the sandbox, Get, Set, Has and TypeOf of Go values, and Reset."
 ---
 
 **Status: released in v0.14.0 (the image) and v0.15.0 (`Kernel`); current in
-v0.17.0, with soft scope, julia's `MethodError` text, and `Get` and `Set`.** This page
+v0.19.0, with soft scope, julia's `MethodError` text, `Get`, `Set`, `Has`,
+`TypeOf` and `Reset`.** This page
 is the usage of the package `interp` for a notebook: how a VM starts in about a
 second instead of building Base for 13 minutes, and how a cell runs on it. The
 README of the repository holds the same flow in brief.
@@ -38,6 +39,16 @@ digest with `ErrImageDigest` before the bytes are decoded, keeps the verified
 file in the user cache directory and hashes it again at every use. A program
 that ships the image itself uses `LoadKernel(reader, …)` or
 `NewKernel(vm, …)` on a VM it loaded.
+
+**`LoadOptions.Digest`.** A program that holds the image bytes pins the digest at
+the load: `LoadOptions{Digest: &digest}` makes `LoadImage` and `LoadKernel` hash
+the whole input first and refuse any other bytes with `ErrImageDigest`, before the
+key, the framing or any object is looked at. The field is a pointer, so that
+unset (the image is not pinned) cannot be a pinned all-zero digest by accident.
+Load an image from an untrusted source with its digest. A load is atomic with
+respect to what the process shares: the types and hints an image adds are
+committed in one step after every conflict has been looked for, and a refused
+image (`ErrImageConflict`) changes none of them.
 
 ## Eval
 
@@ -86,7 +97,73 @@ w, ok, err := k.Get("w") // []float64{2, 4, 7}
 value of any other type is a `*ConversionError` (`errors.Is(err, ErrKernelType)`)
 that names the julia type, and `Set` of a Go type outside the table names the Go
 type. A name that is no identifier is `ErrKernelName`, and an array over
-`VM.MaxMemoryElems` is `ErrMemoryLimit`.
+`VM.MaxMemoryElems` is `ErrMemoryLimit`. `Set` checks a slice's length (and a
+`Matrix`'s `Rows*Cols`, overflow-checked, against `len(Data)`) against
+`VM.MaxMemoryElems` before it converts anything, so a refused slice costs a few
+KiB. A matrix with a zero dimension reads back with its shape, whichever
+dimension is the zero.
+
+`k.Has(name)` answers whether a global of `Main` is bound, and `k.TypeOf(name)`
+julia's type of it as text (`Matrix{Float64}`), also for a type the table does not
+convert; neither copies the value. Both return an error, not a bare `false`,
+while a cell runs: `(false, ErrKernelBusy)` is not the answer "no".
+
+## Reset
+
+```go
+info, err := k.Reset()
+// info.Reloaded  the image was loaded again (the log was past its bound)
+// info.Undone    the writes replayed;  info.Tables  the method tables reverted
+```
+
+`Reset` puts the kernel back in the state `NewKernel` returned it in, for the
+next run of a notebook: what the cells defined, assigned, imported, overloaded or
+mutated is gone, the generator behind `rand` included, and the next cell runs as
+the first of a fresh kernel. It is refused with `ErrKernelBusy` while a cell runs.
+
+It costs what the cells changed, not the size of the image. Every write to an
+object the image holds (`setfield!`, `swapfield!`, `modifyfield!`,
+`replacefield!`, `setfieldonce!`, memory stores and copies) is logged with the
+value it replaces, and `Reset` replays the log in reverse; the methods of the
+functions a cell defined into or deleted from are reverted to the world of the
+start, and the bindings, usings and options of every module are put back. An
+object a cell made carries no log. Measured on a corpus of 18 cells (definitions
+and redefinitions, a struct, a `show` overload on it, an overload of a Base
+method, `using LinearAlgebra`, seeded `rand`, a `push!` to `Base.LOAD_PATH`, a
+`delete_method` of a Base method, a module, errors), which wrote 3790 times to
+objects of the image: `Reset` took 0.6 ms, loading the image again about 0.85 s.
+The same corpus runs on a kernel after a `Reset` as on a fresh one, cell for cell
+(`TestKernelResetBase`).
+
+**The bound.** The log holds `DefaultMaxUndo` (262144) entries, about 18 MiB.
+Past it, `Reset` loads the image again into a new VM and says so
+(`ResetInfo.Reloaded`; `k.VM()` is another VM then, with `Stdout`, `Stderr`,
+`MaxSteps`, `MaxDepth` and `MaxMemoryElems` carried over). A kernel made by
+`NewKernel` from a VM, not from an image (`LoadKernel` and `FetchKernel` keep the
+image's bytes for the reload), has nothing to load: `Reset` answers
+`ErrResetOverflow` and changes nothing.
+
+**What `Reset` does not undo**, by design:
+
+- Go-side state a cell reaches through a `ccall`: open files and sockets, the
+  environment, the working directory, what was already written to `Stdout` and
+  `Stderr`, the clock, libraries opened with `dlopen`, the state of libgmp and
+  libmpfr.
+- Tasks and timers a cell started: cancel its `ctx` and wait before `Reset`.
+- The caches. A type a cell made stays in the weak type caches of the image's
+  types until the collector drops it, and method specializations and compiled
+  bodies stay. A limit an embedder set through `k.VM()` is the one in force.
+- The world counter and the object-id counters, which only move forward:
+  `Base.get_world_counter()` and `objectid` of a new object differ from a fresh
+  kernel's.
+- A write from Go code to a field of the image that is the interpreter's own
+  bookkeeping (method-instance and code-instance caches, task state). A cell's
+  own writes are all logged.
+
+An unseeded `rand()` differs from one fresh kernel to the next, since the
+generator is seeded when the kernel starts. After a `Reset` the generator is in
+the state it started in, so the first draws are the ones the kernel would have
+made first (`TestKernelResetRNG`).
 
 ## Cancellation and budgets
 
@@ -119,14 +196,19 @@ at its load.
 
 ## Known limits
 
-- The candidates of a `MethodError` whose candidates are all equally close
-  (`sin()`) list in the order of the method table, which in julia depends on
-  hashes that mix in each module's random build id: that order is one system
-  image's and is not reproduced.
-- `uppercase`, `lowercase` and the functions that call `utf8proc` are not ported
-  ([#65](https://github.com/go-embedded-julia/julia/issues/65)); a BLAS kernel
-  such as `A * x` does not compute yet
-  ([#33](https://github.com/go-embedded-julia/julia/issues/33)).
+- BLAS computes `gemm`, `gemv` and the level-1 routines for `Float64` and
+  `Float32` (`A * B`, `A * x`, `x' * y`), through go-blas, within its stated error
+  bound of the exact value and not bit for bit with OpenBLAS. The level-3
+  routines other than `gemm` (`trsm`, `syrk`), the complex types and LAPACK
+  (`A \ b` and the factorizations) fail until go-blas has them
+  ([#67](https://github.com/go-embedded-julia/julia/issues/67)).
+- A `Memory` keeps its elements boxed, so each BLAS call copies the elements it
+  reads and writes: O(n) for `gemv` and the level-1 routines, 2.4 to 17 times
+  what the routine itself costs
+  ([#81](https://github.com/go-embedded-julia/julia/issues/81)).
+- The frame pool that makes calls cheaper keeps about 333 argument vectors
+  reachable after a collection ([#99](https://github.com/go-embedded-julia/julia/issues/99));
+  the bound is the pool's size.
 - A VM without Base (`Boot()` only) shows values and errors as the Go repr and
   cells use `Core`'s names.
 - The image is not authenticated by itself
