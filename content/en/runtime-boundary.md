@@ -12,8 +12,11 @@ answer each part. As of v0.13.0, Base runs: the type system (`core`), the tasks
 and the libuv loop, the VFS and the dynamic libraries the VM implements in Go
 (GMP, MPFR, PCRE2 and dSFMT so far) are in place, and loading a C library is a
 stated divergence. Since v0.18.0 the BLAS routines `gemm`, `gemv` and level 1
-(`Float64`, `Float32`) are forwarded to go-blas, and utf8proc is a Go port. Not
-yet: LAPACK and the other level-3 BLAS routines
+(`Float64`, `Float32`) are forwarded to go-blas, and utf8proc is a Go port; since
+v0.21.0 a `Memory{Float64}` is a typed `[]float64` that the double-precision
+routines use in place, and since v0.22.0 the level-3 `trsm`, `trmm`, `syrk` and
+`symm` are forwarded too. Not yet: LAPACK (`lu`, `qr`, `\` on a general matrix,
+`eigen`, `svd`) and `UpperTriangular(A) \ B`
 ([#67](https://github.com/go-embedded-julia/julia/issues/67)), and the stdlibs
 rewritten in Go ([#36](https://github.com/go-embedded-julia/julia/issues/36)).
 
@@ -87,7 +90,12 @@ and LAPACK interface of each routine family as Go functions over go-ndarray's
 column-major `Memory{Float64}` buffer a Julia `Matrix` owns, without copying.
 Families go-ndarray lacks (generalized Schur, banded and tridiagonal
 factorisations, Bunch-Kaufman) are missing kernels to add **to go-ndarray**, not
-to the VM.
+to the VM. State at v0.22.0: the BLAS routines `gemm`, `gemv`, the level-1
+routines and `trsm`, `trmm`, `syrk` and `symm` are forwarded to go-blas, in place
+on a `Memory{Float64}` (a typed `[]float64` since v0.21.0, at 1.02 to 1.16 times the
+cost of calling go-blas directly); a `Float32` memory is still boxed and copied.
+LAPACK is not forwarded yet
+([#67](https://github.com/go-embedded-julia/julia/issues/67)).
 
 ## Regex
 

@@ -11,7 +11,7 @@ fork of the [Hextra](https://github.com/imfing/hextra) theme (pinned to v0.16.0)
 built the same way as the [go-bignum documentation](https://github.com/go-bignum/docs),
 with go-embedded-julia's branding. The organization is **in development**:
 milestones M0 (the oracle harness), M1 (the parser) and M2 (lowering) are done in
-go-embedded-julia/julia v0.3.0, and M3 (the runtime) in v0.13.0 (julia 1.12.6's real Base and seven stdlibs run, with tasks, an event loop and a two-mode VFS; known limits: stdlibs still `.jl`, no BLAS kernels, no host-mode file writes); the current release is v0.19.0 (the prebuilt image, the notebook `Kernel` with `Get`, `Set`, `Has`, `TypeOf` and `Reset`, and BLAS `gemm`, `gemv` and level 1 through go-blas): the site gives the plan and its milestones, the architecture, the runtime boundary
+go-embedded-julia/julia v0.3.0, and M3 (the runtime) in v0.13.0 (julia 1.12.6's real Base and seven stdlibs run, with tasks, an event loop and a two-mode VFS; known limits: stdlibs still `.jl`, no BLAS kernels, no host-mode file writes); the current release is v0.22.0 (the prebuilt image, the notebook `Kernel` with `Get`, `Set`, `Has`, `TypeOf` and a `Reset` that stops the tasks and timers cells started, and BLAS `gemm`, `gemv`, level 1 and the level-3 `trsm`, `trmm`, `syrk` and `symm` through go-blas, in place on a typed `Float64` store; LAPACK is still missing): the site gives the plan and its milestones, the architecture, the runtime boundary
 with its counts, and the licences. Every statement comes from the bibliography of
 [go-scikit/roadmap](https://github.com/go-scikit/roadmap), `bib/julia.md`.
 
@@ -29,8 +29,8 @@ tagged:
 
 `https://go-embedded-julia.github.io/docs/` redirects to `latest/`. Each push to `main`
 replaces the directory of the version it describes, and nothing else. The interpreter
-is tagged v0.19.0, so the pages are published under `0.19/`, which `latest/` follows
-(`0.17/` and `0.13/` stay as they were published).
+is tagged v0.22.0, so the pages are published under `0.22/`, which `latest/` follows
+(`0.19/`, `0.17/` and `0.13/` stay as they were published).
 
 ## Layout
 

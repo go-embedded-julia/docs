@@ -5,8 +5,8 @@ description: "How a program loads the prebuilt system image by its pinned SHA-25
 ---
 
 **Status: released in v0.14.0 (the image) and v0.15.0 (`Kernel`); current in
-v0.19.0, with soft scope, julia's `MethodError` text, `Get`, `Set`, `Has`,
-`TypeOf` and `Reset`.** This page
+v0.22.0, with soft scope, julia's `MethodError` text, `Get`, `Set`, `Has`,
+`TypeOf`, and a `Reset` that stops the tasks and timers cells started.** This page
 is the usage of the package `interp` for a notebook: how a VM starts in about a
 second instead of building Base for 13 minutes, and how a cell runs on it. The
 README of the repository holds the same flow in brief.
@@ -143,13 +143,24 @@ Past it, `Reset` loads the image again into a new VM and says so
 image's bytes for the reload), has nothing to load: `Reset` answers
 `ErrResetOverflow` and changes nothing.
 
+**Tasks and timers (v0.20.0).** Before it rolls back, `Reset` stops the tasks a
+cell started that have not finished and closes the libuv timers it opened
+(`ResetInfo.Tasks`, `ResetInfo.Timers`; `k.Tasks()` counts them for an
+embedder), so that the replay restores the lists such a task waited in without
+it. A stopped task never runs again, and **none of its `finally` or `catch`
+blocks runs**: user code during a `Reset` could print, block or write the state
+the `Reset` is restoring. The task's object is marked done, so `istaskdone` and
+`wait` answer as for a task that ended. A timer is dropped as `close(t)` would
+be, without its close callback. Base's own tasks are left alone. A kernel also
+yields once when it is made, so that the tasks Base makes in its initializers
+are parked before the state `Reset` returns to.
+
 **What `Reset` does not undo**, by design:
 
 - Go-side state a cell reaches through a `ccall`: open files and sockets, the
   environment, the working directory, what was already written to `Stdout` and
   `Stderr`, the clock, libraries opened with `dlopen`, the state of libgmp and
   libmpfr.
-- Tasks and timers a cell started: cancel its `ctx` and wait before `Reset`.
 - The caches. A type a cell made stays in the weak type caches of the image's
   types until the collector drops it, and method specializations and compiled
   bodies stay. A limit an embedder set through `k.VM()` is the one in force.
@@ -192,20 +203,29 @@ and a VM that is already in host mode is refused without it
 type tables, which are guarded, and the hints an image sets on core's shared
 types; an image sets them once and another image may not change them, so
 kernels over images of one release are safe and a second release is refused
-at its load.
+at its load. Since v0.20.0 a load writes nothing to the boot types its VM put in
+those shared caches (a refused load leaves them as they were), and since v0.21.0
+`New` may be called from several goroutines at once.
 
 ## Known limits
 
-- BLAS computes `gemm`, `gemv` and the level-1 routines for `Float64` and
-  `Float32` (`A * B`, `A * x`, `x' * y`), through go-blas, within its stated error
-  bound of the exact value and not bit for bit with OpenBLAS. The level-3
-  routines other than `gemm` (`trsm`, `syrk`), the complex types and LAPACK
-  (`A \ b` and the factorizations) fail until go-blas has them
+- BLAS computes `gemm`, `trsm`, `trmm`, `syrk` and `symm`, `gemv` and the
+  level-1 routines for `Float64` and `Float32` (`A * B`, `A * x`, `x' * y`,
+  `A' * A`, `Symmetric(A) * B`, `UpperTriangular(A) * B`, `B / UpperTriangular(A)`),
+  through go-blas (v0.3.0 for level 3), within its stated error bound of the
+  exact value and not bit for bit with OpenBLAS. The complex types and LAPACK
+  (`A \ b` of a general `A`, `lu`, `qr`, `eigen`, `svd`) fail until go-blas has
+  them, and so does `UpperTriangular(A) \ B`, which julia sends to LAPACK's
+  `trtrs`, not to `trsm`
   ([#67](https://github.com/go-embedded-julia/julia/issues/67)).
-- A `Memory` keeps its elements boxed, so each BLAS call copies the elements it
-  reads and writes: O(n) for `gemv` and the level-1 routines, 2.4 to 17 times
-  what the routine itself costs
-  ([#81](https://github.com/go-embedded-julia/julia/issues/81)).
+- A `Memory` of `Float64` is stored as a `[]float64` (v0.21.0): the
+  double-precision routines read and write it in place, at 1.02 to 1.16 times the
+  cost of calling go-blas directly (3 to 22 times when the elements were boxed),
+  and `Kernel.Get` and `Set` of a `[]float64` or a `Matrix[float64]` box nothing.
+  The price is on the read: an interpreted `Float64` loop boxes one more
+  allocation per element (`s += v[i]` over 10^6 elements: +2.70% allocations,
+  `sum(v)` +1.13%, `v .+ 1.0` +0.52%). A `Memory` of `Float32` is still boxed,
+  so a single-precision call copies the elements it reads and writes.
 - The frame pool that makes calls cheaper keeps about 333 argument vectors
   reachable after a collection ([#99](https://github.com/go-embedded-julia/julia/issues/99));
   the bound is the pool's size.
