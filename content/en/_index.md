@@ -4,17 +4,22 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.19.0 has M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime) done, julia 1.12.6's real Base and seven stdlibs loaded from a pinned prebuilt image, matrix products through go-blas, and a Kernel that runs notebook cells with Go values in and out and resets to its starting state without reloading."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.22.0 has M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime) done, julia 1.12.6's real Base and seven stdlibs loaded from a pinned prebuilt image, BLAS through go-blas in place on a typed Float64 store (level 3 included), and a Kernel that runs notebook cells with Go values in and out and resets to its starting state without reloading."
 ---
 
-**go-embedded-julia is in development. The current release is [v0.19.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.19.0):
+**go-embedded-julia is in development. The current release is [v0.22.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.22.0):
 the interpreter runs julia 1.12.6's real Base and its seven stdlibs, a VM loads
 them from a prebuilt system image pinned by its SHA-256, and a `Kernel` runs
 notebook cells with the REPL's soft scope, julia's own error texts, budgets,
 cancellation, `Get`, `Set`, `Has` and `TypeOf` of Go values, and `Reset`, which
 puts the kernel back in its starting state (0.6 ms after a corpus of 18 cells,
-where loading the image again takes about 0.85 s). `A * x`, `A * B` and `x' * y` of
-`Float64` and `Float32` compute through [go-blas](https://github.com/go-blas/blas).** Milestone M3 (the runtime) was
+where loading the image again takes about 0.85 s; since v0.20.0 it also stops the
+tasks and timers that cells started). `A * x`, `A * B`, `x' * y`, `A' * A`,
+`Symmetric(A) * B` and `B / UpperTriangular(A)` of `Float64` and `Float32` compute through
+[go-blas](https://github.com/go-blas/blas): the level-3 routines `trsm`, `trmm`,
+`syrk` and `symm` since v0.22.0, and a `Memory{Float64}` is a typed `[]float64` since
+v0.21.0, so the double-precision routines work on it in place, at 1.02 to 1.16 times
+the cost of calling go-blas directly (3 to 22 times before).** Milestone M3 (the runtime) was
 completed by [v0.13.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.13.0)
 (2026-11-14); the image is v0.14.0 and the `Kernel` v0.15.0, see [Kernel]({{< relref "kernel" >}}). It follows milestone M0 (the oracle
 harness, against julia 1.12.6), milestone M1 (the parser): a Go port of
@@ -49,24 +54,28 @@ package `interp`, a port of julia 1.12.6's `src/interpreter.c` (v0.6.0 to v0.12.
 `struct` and `abstract type` definitions, methods with `where` clauses, macro
 expansion, `boot.jl`, arrays). The details are in [Architecture]({{< relref "architecture" >}}).
 
-**Known limits of v0.19.0:**
+**Known limits of v0.22.0:**
 
 - `[@async i^2 for i in 1:4]` is correct but takes minutes; this is under
   investigation.
 - An image is not authenticated by itself, and loading one writes process-shared
-  type state: pin its digest
+  type state (a load that is refused no longer leaves the boot types of the shared
+  caches changed, since v0.20.0): pin its digest
   ([#49](https://github.com/go-embedded-julia/julia/issues/49)).
 - The stdlibs are still julia's `.jl` sources; rewriting them in Go is
   [#36](https://github.com/go-embedded-julia/julia/issues/36).
-- BLAS covers `gemm`, `gemv` and the level-1 routines in `Float64` and
-  `Float32`. The level-3 routines other than `gemm` (`trsm`, `syrk`), the
-  complex types and LAPACK (`A \ b`, `lu`, `qr`, `cholesky`, `eigen`, `svd`) fail
-  until go-blas has them
+- BLAS covers `gemm`, `trsm`, `trmm`, `syrk` and `symm`, `gemv` and the level-1
+  routines in `Float64` and `Float32`. The complex types and LAPACK (`A \ b` of
+  a general `A`, `lu`, `qr`, `eigen`, `svd`) fail until go-blas has them, and so
+  does `UpperTriangular(A) \ B`, which julia sends to LAPACK's `trtrs`, not to
+  `trsm`
   ([#67](https://github.com/go-embedded-julia/julia/issues/67)).
-- A `Memory` keeps its elements boxed, so each BLAS call copies the elements it
-  reads and writes: O(n) for `gemv` and the level-1 routines, 2.4 to 17 times
-  what the routine itself costs
-  ([#81](https://github.com/go-embedded-julia/julia/issues/81)).
+- A `Memory` of `Float32` keeps its elements boxed, so a single-precision BLAS
+  call copies the elements it reads and writes. A `Memory` of `Float64` is a
+  `[]float64`, which the double-precision routines read and write in place; the
+  price is on the read, where an interpreted `Float64` loop boxes one more
+  allocation per element (`s += v[i]` over 10^6 elements: +2.70% allocations,
+  `sum(v)` +1.13%, `v .+ 1.0` +0.52%).
 - The frame pool that makes calls cheaper keeps about 333 argument vectors
   reachable after a collection, 6% of those a freshly built Base holds; the
   bound is the pool's size

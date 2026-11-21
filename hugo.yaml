@@ -83,14 +83,14 @@ menu:
         icon: github
 
 params:
-  description: "go-embedded-julia (in development, v0.19.0: milestones M0, the oracle harness, M1, the parser, M2, the lowering, and M3, the runtime, are done; julia 1.12.6's real Base and seven stdlibs load from a pinned prebuilt image, and a Kernel runs notebook cells with Go values in and out, computes matrix products through go-blas, and resets to its starting state without reloading): a Julia interpreter in pure Go that can be embedded, for the julia cells of go-notebook and its WebAssembly playground."
+  description: "go-embedded-julia (in development, v0.22.0: milestones M0, the oracle harness, M1, the parser, M2, the lowering, and M3, the runtime, are done; julia 1.12.6's real Base and seven stdlibs load from a pinned prebuilt image, and a Kernel runs notebook cells with Go values in and out, computes BLAS products through go-blas in place on a typed Float64 store (level 3 included), and resets to its starting state without reloading, stopping the tasks and timers cells started): a Julia interpreter in pure Go that can be embedded, for the julia cells of go-notebook and its WebAssembly playground."
 
   # The release of each library these pages describe, "main" while it has no
   # tag. The newest minor version among the tagged ones is the documentation's
   # version label (v0.1.2 -> 0.1): the CI reads it here. The interpreter is
-  # tagged v0.19.0, so the documentation is version 0.19.
+  # tagged v0.22.0, so the documentation is version 0.22.
   libraries:
-    julia: "v0.19.0"
+    julia: "v0.22.0"
   versions:
     # The version selector shows "main" with the development icon.
     development: "main"
