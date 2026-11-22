@@ -5,10 +5,11 @@ description: "How a program loads the prebuilt system image by its pinned SHA-25
 ---
 
 **Status: released in v0.14.0 (the image) and v0.15.0 (`Kernel`); current in
-v0.24.0, with soft scope, julia's `MethodError` text, `Get`, `Set`, `Has`,
+v0.25.0, with soft scope, julia's `MethodError` text, `Get`, `Set`, `Has`,
 `TypeOf`, a `Reset` that stops the tasks and timers cells started, an empty
 `catch_backtrace()` (v0.23.0) and a Base image that carries the inference of a
-`Float64` matrix display (v0.24.0).** This page
+`Float64` matrix display (v0.24.0), and LU and Cholesky through go-blas
+(v0.25.0).** This page
 is the usage of the package `interp` for a notebook: how a VM starts in about a
 second instead of building Base for 13 minutes, and how a cell runs on it. The
 README of the repository holds the same flow in brief.
@@ -224,10 +225,13 @@ those shared caches (a refused load leaves them as they were), and since v0.21.0
   level-1 routines for `Float64` and `Float32` (`A * B`, `A * x`, `x' * y`,
   `A' * A`, `Symmetric(A) * B`, `UpperTriangular(A) * B`, `B / UpperTriangular(A)`),
   through go-blas (v0.3.0 for level 3), within its stated error bound of the
-  exact value and not bit for bit with OpenBLAS. The complex types and LAPACK
-  (`A \ b` of a general `A`, `lu`, `qr`, `eigen`, `svd`) fail until go-blas has
-  them, and so does `UpperTriangular(A) \ B`, which julia sends to LAPACK's
-  `trtrs`, not to `trsm`
+  exact value and not bit for bit with OpenBLAS. Since v0.25.0 LAPACK's `getrf`,
+  `getrs`, `potrf`, `potrs` and `lacpy` are forwarded too (go-blas v0.4.0), so
+  `lu`, `A \ b`, `factorize`, `cholesky` and `cholesky(A) \ b` work for `Float64`
+  and `Float32`, and `SingularException` and `PosDefException` are raised. The
+  complex types, `inv`, `qr`, `eigen` and `svd` fail until go-blas has them, and
+  so does `UpperTriangular(A) \ B`, which julia sends to LAPACK's `trtrs`, not to
+  `trsm`
   ([#67](https://github.com/go-embedded-julia/julia/issues/67)).
 - A `Memory` of `Float64` is stored as a `[]float64` (v0.21.0): the
   double-precision routines read and write it in place, at 1.02 to 1.16 times the
