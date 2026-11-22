@@ -4,10 +4,10 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.22.0 has M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime) done, julia 1.12.6's real Base and seven stdlibs loaded from a pinned prebuilt image, BLAS through go-blas in place on a typed Float64 store (level 3 included), and a Kernel that runs notebook cells with Go values in and out and resets to its starting state without reloading."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.24.0 has M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime) done, julia 1.12.6's real Base and seven stdlibs loaded from a pinned prebuilt image, BLAS through go-blas in place on a typed Float64 store (level 3 included), and a Kernel that runs notebook cells with Go values in and out and resets to its starting state without reloading."
 ---
 
-**go-embedded-julia is in development. The current release is [v0.22.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.22.0):
+**go-embedded-julia is in development. The current release is [v0.24.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.24.0):
 the interpreter runs julia 1.12.6's real Base and its seven stdlibs, a VM loads
 them from a prebuilt system image pinned by its SHA-256, and a `Kernel` runs
 notebook cells with the REPL's soft scope, julia's own error texts, budgets,
@@ -19,7 +19,12 @@ tasks and timers that cells started). `A * x`, `A * B`, `x' * y`, `A' * A`,
 [go-blas](https://github.com/go-blas/blas): the level-3 routines `trsm`, `trmm`,
 `syrk` and `symm` since v0.22.0, and a `Memory{Float64}` is a typed `[]float64` since
 v0.21.0, so the double-precision routines work on it in place, at 1.02 to 1.16 times
-the cost of calling go-blas directly (3 to 22 times before).** Milestone M3 (the runtime) was
+the cost of calling go-blas directly (3 to 22 times before). Since v0.23.0
+`catch_backtrace()` and the backtrace of a failed task return an empty backtrace,
+as julia does with backtraces off, instead of raising a not-ported error; since
+v0.24.0 the Base image carries the inference of a `Float64` matrix display, so the
+first `Float64` matrix product and its display on a fresh kernel take 0.84 million
+interpreter statements, down from 69.6 million.** Milestone M3 (the runtime) was
 completed by [v0.13.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.13.0)
 (2026-11-14); the image is v0.14.0 and the `Kernel` v0.15.0, see [Kernel]({{< relref "kernel" >}}). It follows milestone M0 (the oracle
 harness, against julia 1.12.6), milestone M1 (the parser): a Go port of
@@ -54,7 +59,7 @@ package `interp`, a port of julia 1.12.6's `src/interpreter.c` (v0.6.0 to v0.12.
 `struct` and `abstract type` definitions, methods with `where` clauses, macro
 expansion, `boot.jl`, arrays). The details are in [Architecture]({{< relref "architecture" >}}).
 
-**Known limits of v0.22.0:**
+**Known limits of v0.24.0:**
 
 - `[@async i^2 for i in 1:4]` is correct but takes minutes; this is under
   investigation.
@@ -76,10 +81,10 @@ expansion, `boot.jl`, arrays). The details are in [Architecture]({{< relref "arc
   price is on the read, where an interpreted `Float64` loop boxes one more
   allocation per element (`s += v[i]` over 10^6 elements: +2.70% allocations,
   `sum(v)` +1.13%, `v .+ 1.0` +0.52%).
-- The frame pool that makes calls cheaper keeps about 333 argument vectors
-  reachable after a collection, 6% of those a freshly built Base holds; the
-  bound is the pool's size
-  ([#99](https://github.com/go-embedded-julia/julia/issues/99)).
+- `rand(m, n)` reaches an `llvmcall` that is not ported
+  ([#120](https://github.com/go-embedded-julia/julia/issues/120)).
+- The first matrix display of an element type other than `Float64` may still pay
+  the cost of inference that the `Float64` one no longer does.
 - Writing a file in host mode is not ported yet
   ([#32](https://github.com/go-embedded-julia/julia/issues/32)).
 - Loading a C library is a stated divergence from julia (see above).
