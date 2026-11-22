@@ -5,8 +5,10 @@ description: "How a program loads the prebuilt system image by its pinned SHA-25
 ---
 
 **Status: released in v0.14.0 (the image) and v0.15.0 (`Kernel`); current in
-v0.22.0, with soft scope, julia's `MethodError` text, `Get`, `Set`, `Has`,
-`TypeOf`, and a `Reset` that stops the tasks and timers cells started.** This page
+v0.24.0, with soft scope, julia's `MethodError` text, `Get`, `Set`, `Has`,
+`TypeOf`, a `Reset` that stops the tasks and timers cells started, an empty
+`catch_backtrace()` (v0.23.0) and a Base image that carries the inference of a
+`Float64` matrix display (v0.24.0).** This page
 is the usage of the package `interp` for a notebook: how a VM starts in about a
 second instead of building Base for 13 minutes, and how a cell runs on it. The
 README of the repository holds the same flow in brief.
@@ -209,6 +211,15 @@ those shared caches (a refused load leaves them as they were), and since v0.21.0
 
 ## Known limits
 
+- Backtraces are off, as in a julia run with them off (v0.23.0):
+  `catch_backtrace()` and the backtrace of a failed task are empty, and
+  `jl_get_excstack` answers an empty vector, instead of failing as not ported.
+- The first `Float64` matrix product and its display on a fresh kernel take 0.84
+  million interpreter statements, where they took 69.6 million (v0.24.0): the
+  display calls `Base._return_type`, which runs julia's own compiler in the
+  interpreter, and the image builder now runs the display of a `Float64` matrix
+  before it saves, so the inferred code is in the image. The first display of
+  another element type may still pay that cost.
 - BLAS computes `gemm`, `trsm`, `trmm`, `syrk` and `symm`, `gemv` and the
   level-1 routines for `Float64` and `Float32` (`A * B`, `A * x`, `x' * y`,
   `A' * A`, `Symmetric(A) * B`, `UpperTriangular(A) * B`, `B / UpperTriangular(A)`),
@@ -226,9 +237,10 @@ those shared caches (a refused load leaves them as they were), and since v0.21.0
   allocation per element (`s += v[i]` over 10^6 elements: +2.70% allocations,
   `sum(v)` +1.13%, `v .+ 1.0` +0.52%). A `Memory` of `Float32` is still boxed,
   so a single-precision call copies the elements it reads and writes.
-- The frame pool that makes calls cheaper keeps about 333 argument vectors
-  reachable after a collection ([#99](https://github.com/go-embedded-julia/julia/issues/99));
-  the bound is the pool's size.
+- `rand(m, n)` reaches an `llvmcall` that is not ported
+  ([#120](https://github.com/go-embedded-julia/julia/issues/120)).
+- The first matrix display of an element type other than `Float64` may still pay
+  the cost of inference that the `Float64` one no longer does (see above).
 - A VM without Base (`Boot()` only) shows values and errors as the Go repr and
   cells use `Core`'s names.
 - The image is not authenticated by itself
