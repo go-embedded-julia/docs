@@ -15,8 +15,10 @@ stated divergence. Since v0.18.0 the BLAS routines `gemm`, `gemv` and level 1
 (`Float64`, `Float32`) are forwarded to go-blas, and utf8proc is a Go port; since
 v0.21.0 a `Memory{Float64}` is a typed `[]float64` that the double-precision
 routines use in place, and since v0.22.0 the level-3 `trsm`, `trmm`, `syrk` and
-`symm` are forwarded too. Not yet: LAPACK (`lu`, `qr`, `\` on a general matrix,
-`eigen`, `svd`) and `UpperTriangular(A) \ B`
+`symm` are forwarded too, and since v0.25.0 the LAPACK routines `getrf`, `getrs`,
+`potrf` and `potrs` (single and double precision) and `lacpy`, so `lu`, `A \ b`,
+`factorize`, `cholesky` and `cholesky(A) \ b` run. Not yet: `inv`, `qr`, `eigen`,
+`svd`, the complex types and `UpperTriangular(A) \ B`
 ([#67](https://github.com/go-embedded-julia/julia/issues/67)), and the stdlibs
 rewritten in Go ([#36](https://github.com/go-embedded-julia/julia/issues/36)).
 
@@ -90,11 +92,15 @@ and LAPACK interface of each routine family as Go functions over go-ndarray's
 column-major `Memory{Float64}` buffer a Julia `Matrix` owns, without copying.
 Families go-ndarray lacks (generalized Schur, banded and tridiagonal
 factorisations, Bunch-Kaufman) are missing kernels to add **to go-ndarray**, not
-to the VM. State at v0.24.0 (unchanged since v0.22.0): the BLAS routines `gemm`, `gemv`, the level-1
+to the VM. State at v0.25.0: the BLAS routines `gemm`, `gemv`, the level-1
 routines and `trsm`, `trmm`, `syrk` and `symm` are forwarded to go-blas, in place
 on a `Memory{Float64}` (a typed `[]float64` since v0.21.0, at 1.02 to 1.16 times the
 cost of calling go-blas directly); a `Float32` memory is still boxed and copied.
-LAPACK is not forwarded yet
+LU and Cholesky are forwarded too (LAPACK `getrf`, `getrs`, `potrf`, `potrs` and
+`lacpy`, to go-blas v0.4.0, `Float64` and `Float32`), raising `SingularException`
+and `PosDefException`; 712 of julia's `lu.jl` and `cholesky.jl` tests pass on the
+Base image. The rest of LAPACK (`inv`, `qr`, `eigen`, `svd`, the complex types
+and `trtrs` for `UpperTriangular(A) \ B`) is still pending
 ([#67](https://github.com/go-embedded-julia/julia/issues/67)).
 
 ## Regex

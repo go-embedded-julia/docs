@@ -4,10 +4,10 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.24.0 has M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime) done, julia 1.12.6's real Base and seven stdlibs loaded from a pinned prebuilt image, BLAS through go-blas in place on a typed Float64 store (level 3 included), and a Kernel that runs notebook cells with Go values in and out and resets to its starting state without reloading."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.25.0 has M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime) done, julia 1.12.6's real Base and seven stdlibs loaded from a pinned prebuilt image, BLAS through go-blas in place on a typed Float64 store (level 3 included), and a Kernel that runs notebook cells with Go values in and out and resets to its starting state without reloading."
 ---
 
-**go-embedded-julia is in development. The current release is [v0.24.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.24.0):
+**go-embedded-julia is in development. The current release is [v0.25.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.25.0):
 the interpreter runs julia 1.12.6's real Base and its seven stdlibs, a VM loads
 them from a prebuilt system image pinned by its SHA-256, and a `Kernel` runs
 notebook cells with the REPL's soft scope, julia's own error texts, budgets,
@@ -24,7 +24,9 @@ the cost of calling go-blas directly (3 to 22 times before). Since v0.23.0
 as julia does with backtraces off, instead of raising a not-ported error; since
 v0.24.0 the Base image carries the inference of a `Float64` matrix display, so the
 first `Float64` matrix product and its display on a fresh kernel take 0.84 million
-interpreter statements, down from 69.6 million.** Milestone M3 (the runtime) was
+interpreter statements, down from 69.6 million. Since v0.25.0 LAPACK's `getrf`,
+`getrs`, `potrf` and `potrs` run through go-blas v0.4.0, so `lu`, `A \ b`,
+`factorize`, `cholesky` and `cholesky(A) \ b` work for `Float64` and `Float32`.** Milestone M3 (the runtime) was
 completed by [v0.13.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.13.0)
 (2026-11-14); the image is v0.14.0 and the `Kernel` v0.15.0, see [Kernel]({{< relref "kernel" >}}). It follows milestone M0 (the oracle
 harness, against julia 1.12.6), milestone M1 (the parser): a Go port of
@@ -59,7 +61,7 @@ package `interp`, a port of julia 1.12.6's `src/interpreter.c` (v0.6.0 to v0.12.
 `struct` and `abstract type` definitions, methods with `where` clauses, macro
 expansion, `boot.jl`, arrays). The details are in [Architecture]({{< relref "architecture" >}}).
 
-**Known limits of v0.24.0:**
+**Known limits of v0.25.0:**
 
 - `[@async i^2 for i in 1:4]` is correct but takes minutes; this is under
   investigation.
@@ -70,10 +72,10 @@ expansion, `boot.jl`, arrays). The details are in [Architecture]({{< relref "arc
 - The stdlibs are still julia's `.jl` sources; rewriting them in Go is
   [#36](https://github.com/go-embedded-julia/julia/issues/36).
 - BLAS covers `gemm`, `trsm`, `trmm`, `syrk` and `symm`, `gemv` and the level-1
-  routines in `Float64` and `Float32`. The complex types and LAPACK (`A \ b` of
-  a general `A`, `lu`, `qr`, `eigen`, `svd`) fail until go-blas has them, and so
-  does `UpperTriangular(A) \ B`, which julia sends to LAPACK's `trtrs`, not to
-  `trsm`
+  routines in `Float64` and `Float32`, and LAPACK covers `getrf`, `getrs`, `potrf`
+  and `potrs` (`lu`, `A \ b`, `factorize`, `cholesky`). The complex types, `inv`,
+  `qr`, `eigen` and `svd` fail until go-blas has them, and so does
+  `UpperTriangular(A) \ B`, which julia sends to LAPACK's `trtrs`, not to `trsm`
   ([#67](https://github.com/go-embedded-julia/julia/issues/67)).
 - A `Memory` of `Float32` keeps its elements boxed, so a single-precision BLAS
   call copies the elements it reads and writes. A `Memory` of `Float64` is a
