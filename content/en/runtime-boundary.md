@@ -90,7 +90,7 @@ and LAPACK interface of each routine family as Go functions over go-ndarray's
 column-major `Memory{Float64}` buffer a Julia `Matrix` owns, without copying.
 Families go-ndarray lacks (generalized Schur, banded and tridiagonal
 factorisations, Bunch-Kaufman) are missing kernels to add **to go-ndarray**, not
-to the VM. State at v0.22.0: the BLAS routines `gemm`, `gemv`, the level-1
+to the VM. State at v0.24.0 (unchanged since v0.22.0): the BLAS routines `gemm`, `gemv`, the level-1
 routines and `trsm`, `trmm`, `syrk` and `symm` are forwarded to go-blas, in place
 on a `Memory{Float64}` (a typed `[]float64` since v0.21.0, at 1.02 to 1.16 times the
 cost of calling go-blas directly); a `Float32` memory is still boxed and copied.
