@@ -5,11 +5,11 @@ description: "How a program loads the prebuilt system image by its pinned SHA-25
 ---
 
 **Status: released in v0.14.0 (the image) and v0.15.0 (`Kernel`); current in
-v0.25.0, with soft scope, julia's `MethodError` text, `Get`, `Set`, `Has`,
+v0.26.0, with soft scope, julia's `MethodError` text, `Get`, `Set`, `Has`,
 `TypeOf`, a `Reset` that stops the tasks and timers cells started, an empty
 `catch_backtrace()` (v0.23.0) and a Base image that carries the inference of a
 `Float64` matrix display (v0.24.0), and LU and Cholesky through go-blas
-(v0.25.0).** This page
+(v0.25.0), and the bodies of `@generated` functions (v0.26.0).** This page
 is the usage of the package `interp` for a notebook: how a VM starts in about a
 second instead of building Base for 13 minutes, and how a cell runs on it. The
 README of the repository holds the same flow in brief.
