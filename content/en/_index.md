@@ -4,10 +4,10 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable Julia interpreter, in development: v0.25.0 has M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime) done, julia 1.12.6's real Base and seven stdlibs loaded from a pinned prebuilt image, BLAS through go-blas in place on a typed Float64 store (level 3 included), and a Kernel that runs notebook cells with Go values in and out and resets to its starting state without reloading."
+description: "A pure-Go, embeddable Julia interpreter, in development: v0.26.0 has M0 (oracle harness), M1 (parser), M2 (lowering) and M3 (runtime) done, julia 1.12.6's real Base and seven stdlibs loaded from a pinned prebuilt image, BLAS through go-blas in place on a typed Float64 store (level 3 included), and a Kernel that runs notebook cells with Go values in and out and resets to its starting state without reloading."
 ---
 
-**go-embedded-julia is in development. The current release is [v0.25.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.25.0):
+**go-embedded-julia is in development. The current release is [v0.26.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.26.0):
 the interpreter runs julia 1.12.6's real Base and its seven stdlibs, a VM loads
 them from a prebuilt system image pinned by its SHA-256, and a `Kernel` runs
 notebook cells with the REPL's soft scope, julia's own error texts, budgets,
@@ -26,7 +26,10 @@ v0.24.0 the Base image carries the inference of a `Float64` matrix display, so t
 first `Float64` matrix product and its display on a fresh kernel take 0.84 million
 interpreter statements, down from 69.6 million. Since v0.25.0 LAPACK's `getrf`,
 `getrs`, `potrf` and `potrs` run through go-blas v0.4.0, so `lu`, `A \ b`,
-`factorize`, `cholesky` and `cholesky(A) \ b` work for `Float64` and `Float32`.** Milestone M3 (the runtime) was
+`factorize`, `cholesky` and `cholesky(A) \ b` work for `Float64` and `Float32`. Since v0.26.0 the bodies of `@generated` functions run
+(staged evaluation, cached once per signature in a bounded table), so SHA-1,
+SHA-256 and SHA-512 give the published FIPS digests and seeded random states
+differ by seed; the Base image is 25,743,540 bytes.** Milestone M3 (the runtime) was
 completed by [v0.13.0](https://github.com/go-embedded-julia/julia/releases/tag/v0.13.0)
 (2026-11-14); the image is v0.14.0 and the `Kernel` v0.15.0, see [Kernel]({{< relref "kernel" >}}). It follows milestone M0 (the oracle
 harness, against julia 1.12.6), milestone M1 (the parser): a Go port of
@@ -61,7 +64,7 @@ package `interp`, a port of julia 1.12.6's `src/interpreter.c` (v0.6.0 to v0.12.
 `struct` and `abstract type` definitions, methods with `where` clauses, macro
 expansion, `boot.jl`, arrays). The details are in [Architecture]({{< relref "architecture" >}}).
 
-**Known limits of v0.25.0:**
+**Known limits of v0.26.0:**
 
 - `[@async i^2 for i in 1:4]` is correct but takes minutes; this is under
   investigation.
@@ -83,8 +86,8 @@ expansion, `boot.jl`, arrays). The details are in [Architecture]({{< relref "arc
   price is on the read, where an interpreted `Float64` loop boxes one more
   allocation per element (`s += v[i]` over 10^6 elements: +2.70% allocations,
   `sum(v)` +1.13%, `v .+ 1.0` +0.52%).
-- `rand(m, n)` reaches an `llvmcall` that is not ported
-  ([#120](https://github.com/go-embedded-julia/julia/issues/120)).
+- `rand(m, n)` reaches an `llvmcall` that is not ported, and seeded `rand` has not
+  yet been compared with julia 1.12.6 ([#120](https://github.com/go-embedded-julia/julia/issues/120)).
 - The first matrix display of an element type other than `Float64` may still pay
   the cost of inference that the `Float64` one no longer does.
 - Writing a file in host mode is not ported yet
